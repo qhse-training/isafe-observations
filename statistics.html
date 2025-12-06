@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Статистика карточек наблюдения за опасностями</title>
   
+  <!-- Парольная защита -->
+  <script>
+    const ADMIN_PASSWORD = "admin123";
+    let isAuthenticated = sessionStorage.getItem('statisticsAuth') === 'true';
+    
+    if (!isAuthenticated) {
+      const password = prompt("Введите пароль для доступа к статистике:");
+      if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem('statisticsAuth', 'true');
+        location.reload();
+      } else {
+        alert("Неверный пароль!");
+        window.location.href = 'Карта.html';
+      }
+    }
+  </script>
+  
   <!-- Подключение Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
