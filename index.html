@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта наблюдения iSafe Светофор</title>
+    
+    <!-- Подключение Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+        h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .observation-form {
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .factors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .factor-category {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .factor-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .factor-item:hover {
+            background-color: #f0f8ff;
+        }
+        .factor-item label {
+            margin: 0;
+            flex-grow: 1;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .factor-item input[type="checkbox"] {
+            margin-left: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        .red-box {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .yellow-box {
+            background-color: #fffde7;
+            border: 2px solid #ffeb3b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .green-box {
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .color-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .red-header {
+            background-color: #f44336;
+            color: white;
+        }
+        .yellow-header {
+            background-color: #ffeb3b;
+            color: #333;
+        }
+        .green-header {
+            background-color: #4caf50;
+            color: white;
+        }
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .blue-box {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .blue-box h3 {
+            color: white;
+            margin-top: 0;
+        }
+        .stop-work-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+        .loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            .factors-grid {
+                grid-template-columns: 1fr;
+            }
+            .stop-work-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Карта наблюдения iSafe Светофор</h1>
+        
+        <div class="blue-box">
+            <h3>Информация о наблюдателе</h3>
+        </div>
+        
+        <div class="observation-form">
+            <table>
+                <tr>
+                    <th>ФИО наблюдателя</th>
+                    <th>Дата и время</th>
+                </tr>
+                <tr>
+                    <td><input type="text" id="observer-name" required></td>
+                    <td><input type="datetime-local" id="datetime" required></td>
+                </tr>
+                <tr>
+                    <th>Компания наблюдателя</th>
+                    <th>Компания наблюдения</th>
+                </tr>
+                <tr>
+                    <td><input type="text" id="observer-company" required></td>
+                    <td><input type="text" id="observation-company" required></td>
+                </tr>
+                <tr>
+                    <th colspan="2">
+                        <label for="area">Зона/Участок</label>
+                        <select id="area" required>
+                            <option value="">Выберите зону/участок</option>
+                            <option value="production">Производственный участок</option>
+                            <option value="storage">Складская зона</option>
+                            <option value="office">Офисное помещение</option>
+                            <option value="outdoor">Открытая территория</option>
+                        </select>
+                    </th>
+                </tr>
+                <tr>
+                    <th colspan="2">
+                        <label for="observation-type">Выберите тип наблюдения:</label>
+                        <select id="observation-type" required>
+                            <option value="unsafe-condition">Небезопасное условие</option>
+                            <option value="unsafe-action">Небезопасное действие</option>
+                            <option value="safe-condition">Безопасное условие</option>
+                            <option value="safe-action">Безопасное действие</option>
+                            <option value="no-consequence">Инцидент без последствий</option>
+                        </select>
+                    </th>
+                </tr>
+            </table>
+
+            <div class="stop-work-section">
+                <div><strong>Остановил работу:</strong></div>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="stop-yes" name="work-stopped" value="Да">
+                        <label for="stop-yes">Да</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="stop-no" name="work-stopped" value="Нет" checked>
+                        <label for="stop-no">Нет</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="red-box">
+                <div class="color-header red-header">Реакция (Что я делаю?)</div>
+                <textarea id="reaction" placeholder="Опишите ваши действия..." required></textarea>
+            </div>
+
+            <div class="yellow-box">
+                <div class="color-header yellow-header">Обнаружение (Что я вижу?)</div>
+                <textarea id="detection" placeholder="Опишите что вы наблюдаете..." required></textarea>
+            </div>
+
+            <div class="green-box">
+                <div class="color-header green-header">Решение (Как это исправить?)</div>
+                <textarea id="solution" placeholder="Опишите предлагаемое решение..." required></textarea>
+            </div>
+        </div>
+
+        <h2>Опасные и вредные факторы (отметьте соответствующие)</h2>
+        
+        <div class="factors-grid">
+            <div class="factor-category">
+                <h3>Физические факторы</h3>
+                <div class="factor-item">
+                    <label for="noise">Шум</label>
+                    <input type="checkbox" id="noise" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="vibration">Вибрация</label>
+                    <input type="checkbox" id="vibration" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="radiation">Радиация</label>
+                    <input type="checkbox" id="radiation" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="temperature">Температура</label>
+                    <input type="checkbox" id="temperature" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="height">Работа на высоте</label>
+                    <input type="checkbox" id="height" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="equipment">Тяжёлая техника</label>
+                    <input type="checkbox" id="equipment" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="tools">Ручные и переносные инструменты</label>
+                    <input type="checkbox" id="tools" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="falling">Падающие предметы</label>
+                    <input type="checkbox" id="falling" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="particles">Летящие частицы</label>
+                    <input type="checkbox" id="particles" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="slipping">Подскальзывание, Спотыкание</label>
+                    <input type="checkbox" id="slipping" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="rotating">Крутящиеся и вращающиеся</label>
+                    <input type="checkbox" id="rotating" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="electrical">Электробезопасность</label>
+                    <input type="checkbox" id="electrical" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="transport">Транспорт</label>
+                    <input type="checkbox" id="transport" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="lifting">Грузоподъемные работы</label>
+                    <input type="checkbox" id="lifting" class="factor-checkbox">
+                </div>
+            </div>
+
+            <div class="factor-category">
+                <h3>Химические и биологические факторы</h3>
+                <div class="factor-item">
+                    <label for="chemical">Химическая</label>
+                    <input type="checkbox" id="chemical" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="biological">Биологическая</label>
+                    <input type="checkbox" id="biological" class="factor-checkbox">
+                </div>
+                
+                <h3>Психофизиологические факторы</h3>
+                <div class="factor-item">
+                    <label for="psychological">Психологический фактор</label>
+                    <input type="checkbox" id="psychological" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="ergonomics">Эргономика</label>
+                    <input type="checkbox" id="ergonomics" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="substances">Психотропные вещества</label>
+                    <input type="checkbox" id="substances" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="manual">Ручное перемещение</label>
+                    <input type="checkbox" id="manual" class="factor-checkbox">
+                </div>
+            </div>
+
+            <div class="factor-category">
+                <h3>Организационные и поведенческие факторы</h3>
+                <div class="factor-item">
+                    <label for="ppe">СИЗ</label>
+                    <input type="checkbox" id="ppe" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="cleaning">Уборка рабочего места</label>
+                    <input type="checkbox" id="cleaning" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="confined">Замкнутое пространство</label>
+                    <input type="checkbox" id="confined" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="lockout">Блокировка/Маркировка</label>
+                    <input type="checkbox" id="lockout" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="fire">Пожарная безопасность</label>
+                    <input type="checkbox" id="fire" class="factor-checkbox">
+                </div>
+                <div class="factor-item">
+                    <label for="lighting">Освещение</label>
+                    <input type="checkbox" id="lighting" class="factor-checkbox">
+                </div>
+            </div>
+        </div>
+
+        <div class="warning">
+            Останавливай небезопасную работу! Сообщай об опасности! Исправляй и продлевай!
+        </div>
+        
+        <div class="success-message" id="success-message">
+            Карточка успешно отправлена!
+        </div>
+        
+        <div class="error-message" id="error-message">
+            Ошибка при отправке!
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="submit-btn" id="send-btn">Отправить карточку</button>
+            <button class="submit-btn" style="background-color: #6c757d;" id="clear-btn">Очистить форму</button>
+            <button class="submit-btn" style="background-color: #28a745;" id="view-register-btn">Просмотреть регистр</button>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpI00DhnV2AqrVxE7eJ5nLyo7icFobLoU",
+            authDomain: "i-safe-8aff1.firebaseapp.com",
+            projectId: "i-safe-8aff1",
+            storageBucket: "i-safe-8aff1.firebasestorage.app",
+            messagingSenderId: "721183035804",
+            appId: "1:721183035804:web:f81eba42fe1f272c1f3859",
+            measurementId: "G-5737V4DSJJ"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Функция для получения выбранных факторов
+        function getSelectedFactors() {
+            const selectedFactors = [];
+            document.querySelectorAll('.factor-checkbox:checked').forEach(checkbox => {
+                selectedFactors.push(checkbox.parentElement.querySelector('label').textContent.trim());
+            });
+            return selectedFactors;
+        }
+
+        // Функция сохранения в Firebase
+        async function saveObservationToFirebase(observation) {
+            try {
+                console.log('Сохранение в Firebase...', observation);
+                
+                // Добавляем метаданные
+                observation.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                observation.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                observation.status = 'active';
+                
+                // Сохраняем в Firestore
+                const docRef = await db.collection('observations').add(observation);
+                
+                console.log('✅ Данные успешно сохранены в Firebase. ID:', docRef.id);
+                return { success: true, id: docRef.id, docRef: docRef };
+                
+            } catch (error) {
+                console.error('❌ Ошибка сохранения в Firebase:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Функция сохранения в localStorage
+        function saveObservationToLocalStorage(observation, firebaseId = null) {
+            const observationWithId = {
+                ...observation,
+                id: firebaseId || 'local_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                synced: !!firebaseId
+            };
+            
+            const existingData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            existingData.push(observationWithId);
+            localStorage.setItem('hseObservations', JSON.stringify(existingData));
+            
+            return observationWithId;
+        }
+
+        // Функция показа сообщения
+        function showMessage(message, isSuccess = true) {
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+            
+            if (isSuccess) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            } else {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+            
+            // Прокручиваем к сообщению
+            (isSuccess ? successMessage : errorMessage).scrollIntoView({ behavior: 'smooth' });
+            
+            // Скрываем сообщение через 5 секунд
+            setTimeout(function() {
+                if (isSuccess) {
+                    successMessage.style.display = 'none';
+                } else {
+                    errorMessage.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        // Функция валидации формы
+        function validateForm() {
+            const requiredFields = [
+                'observer-name',
+                'datetime',
+                'observer-company',
+                'observation-company',
+                'reaction',
+                'detection',
+                'solution'
+            ];
+            
+            for (const fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    const fieldName = field.previousElementSibling?.textContent || 
+                                    field.parentElement.previousElementSibling?.textContent ||
+                                    field.parentElement.parentElement.previousElementSibling?.textContent ||
+                                    'Поле';
+                    showMessage(`Пожалуйста, заполните: ${fieldName}`, false);
+                    field.focus();
+                    return false;
+                }
+            }
+            
+            if (document.getElementById('area').value === '') {
+                showMessage('Пожалуйста, выберите зону/участок', false);
+                document.getElementById('area').focus();
+                return false;
+            }
+            
+            if (document.getElementById('observation-type').value === '') {
+                showMessage('Пожалуйста, выберите тип наблюдения', false);
+                document.getElementById('observation-type').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Функция сброса формы
+        function resetForm() {
+            document.getElementById('observer-name').value = '';
+            document.getElementById('observer-company').value = '';
+            document.getElementById('observation-company').value = '';
+            document.getElementById('area').selectedIndex = 0;
+            document.getElementById('observation-type').selectedIndex = 0;
+            document.getElementById('stop-no').checked = true;
+            document.getElementById('reaction').value = '';
+            document.getElementById('detection').value = '';
+            document.getElementById('solution').value = '';
+            
+            // Сброс чекбоксов факторов
+            document.querySelectorAll('.factor-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Установка текущей даты и времени
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = formattedNow;
+        }
+
+        // Функция синхронизации локальных данных
+        async function syncLocalData() {
+            const localData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            const unsyncedData = localData.filter(item => !item.synced && !item.id.startsWith('local_'));
+            
+            if (unsyncedData.length > 0) {
+                console.log(`Обнаружено ${unsyncedData.length} несинхронизированных записей`);
+                
+                for (const data of unsyncedData) {
+                    try {
+                        // Удаляем временные поля
+                        const { id, savedAt, synced, ...cleanData } = data;
+                        
+                        const result = await saveObservationToFirebase(cleanData);
+                        if (result.success) {
+                            // Помечаем как синхронизированную
+                            const index = localData.findIndex(item => item.id === id);
+                            if (index > -1) {
+                                localData[index].synced = true;
+                                localData[index].firebaseId = result.id;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Ошибка синхронизации:', error);
+                    }
+                }
+                
+                // Обновляем localStorage
+                localStorage.setItem('hseObservations', JSON.stringify(localData));
+            }
+        }
+
+        // Функция проверки соединения
+        function checkConnection() {
+            return navigator.onLine && typeof db !== 'undefined';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Firebase инициализирован:', firebase.apps.length > 0);
+            console.log('Firestore доступен:', !!db);
+            
+            // Установка текущей даты и времени по умолчанию
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = formattedNow;
+            
+            // Проверка сети и синхронизация
+            if (navigator.onLine) {
+                syncLocalData();
+            }
+            
+            // Слушатели событий сети
+            window.addEventListener('online', () => {
+                console.log('✅ Онлайн - запускаю синхронизацию');
+                showMessage('Соединение восстановлено. Синхронизация данных...', true);
+                syncLocalData();
+            });
+            
+            window.addEventListener('offline', () => {
+                console.log('⚠️ Офлайн - данные будут сохранены локально');
+                showMessage('Нет подключения к интернету. Данные будут сохранены локально.', false);
+            });
+            
+            // Обработка отправки формы
+            document.getElementById('send-btn').addEventListener('click', async function() {
+                if (!validateForm()) return;
+                
+                // Создаем объект наблюдения
+                const observation = {
+                    name: document.getElementById('observer-name').value,
+                    observationDateTime: document.getElementById('datetime').value,
+                    companyObserver: document.getElementById('observer-company').value,
+                    companyObserved: document.getElementById('observation-company').value,
+                    area: document.getElementById('area').value,
+                    areaText: document.getElementById('area').options[document.getElementById('area').selectedIndex].text,
+                    typeObservation: document.getElementById('observation-type').value,
+                    typeObservationText: document.getElementById('observation-type').options[document.getElementById('observation-type').selectedIndex].text,
+                    swa: document.querySelector('input[name="work-stopped"]:checked').value,
+                    reaction: document.getElementById('reaction').value,
+                    detection: document.getElementById('detection').value,
+                    solution: document.getElementById('solution').value,
+                    typeHazard: getSelectedFactors(),
+                    source: 'web-form',
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        online: navigator.onLine
+                    }
+                };
+                
+                // Показываем индикатор загрузки
+                const originalText = this.textContent;
+                this.textContent = 'Отправка...';
+                this.classList.add('loading');
+                this.disabled = true;
+                
+                try {
+                    // Проверяем соединение
+                    const isOnline = checkConnection();
+                    
+                    if (isOnline) {
+                        // Пытаемся сохранить в Firebase
+                        const result = await saveObservationToFirebase(observation);
+                        
+                        if (result.success) {
+                            // Сохраняем в localStorage с ID из Firebase
+                            saveObservationToLocalStorage(observation, result.id);
+                            showMessage('✅ Карточка успешно отправлена в базу данных!');
+                        } else {
+                            // Сохраняем только в localStorage
+                            saveObservationToLocalStorage(observation);
+                            showMessage('⚠️ Сохранено локально (ошибка Firebase). Данные синхронизируются при восстановлении связи.');
+                        }
+                    } else {
+                        // Сохраняем только в localStorage
+                        saveObservationToLocalStorage(observation);
+                        showMessage('⚠️ Сохранено локально (офлайн режим). Данные синхронизируются при восстановлении связи.');
+                    }
+                    
+                    // Очистка формы
+                    resetForm();
+                    
+                } catch (error) {
+                    console.error('Критическая ошибка:', error);
+                    
+                    // Сохраняем в localStorage как fallback
+                    saveObservationToLocalStorage(observation);
+                    showMessage('⚠️ Сохранено локально (ошибка соединения)', false);
+                    resetForm();
+                    
+                } finally {
+                    // Восстанавливаем кнопку
+                    this.textContent = originalText;
+                    this.classList.remove('loading');
+                    this.disabled = false;
+                }
+            });
+            
+            // Обработка очистки формы
+            document.getElementById('clear-btn').addEventListener('click', function() {
+                resetForm();
+                document.getElementById('success-message').style.display = 'none';
+                document.getElementById('error-message').style.display = 'none';
+            });
+            
+            // Переход к регистру
+            document.getElementById('view-register-btn').addEventListener('click', function() {
+                window.open('Регистр.html', '_blank');
+            });
+            
+            // Проверяем наличие офлайн данных при загрузке
+            const localData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            const offlineCount = localData.filter(item => !item.synced).length;
+            if (offlineCount > 0) {
+                console.log(`Найдено ${offlineCount} несинхронизированных записей`);
+            }
+        });
+    </script>
+</body>
+</html>
