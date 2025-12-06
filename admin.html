@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель i-SAFE - Статистика и регистр</title>
+  
+  <!-- Подключение Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* Общие стили */
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      padding-bottom: 30px;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin: 0;
+    }
+    
+    /* Стили для вкладок */
+    .tabs {
+      display: flex;
+      background: #ecf0f1;
+      border-bottom: 2px solid #3498db;
+    }
+    .tab-btn {
+      padding: 15px 30px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      color: #7f8c8d;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn:hover {
+      background-color: rgba(52, 152, 219, 0.1);
+    }
+    .tab-btn.active {
+      color: #3498db;
+      border-bottom: 3px solid #3498db;
+      background-color: white;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Стили для статистики (существующие) */
+    .controls {
+      padding: 15px 20px;
+      background: #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .controls button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    .controls button:hover {
+      background-color: #2980b9;
+    }
+    .status-info {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-online {
+      background-color: #2ecc71;
+    }
+    .status-offline {
+      background-color: #e74c3c;
+    }
+    .status-loading {
+      background-color: #f39c12;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-controls select,
+    .filter-controls input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+    .chart-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .chart-title {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #2c3e50;
+      text-align: center;
+      font-weight: 600;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 300px;
+    }
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-left: 4px solid #3498db;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 10px 0;
+    }
+    .stat-label {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    .loading-message {
+      text-align: center;
+      padding: 40px;
+      color: #3498db;
+      font-style: italic;
+    }
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      color: #e74c3c;
+      font-style: italic;
+    }
+    .period-selector {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .period-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .period-btn.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+    
+    /* Стили для регистра */
+    .register-container {
+      padding: 20px;
+    }
+    .register-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #ecf0f1;
+      border-radius: 8px;
+    }
+    .search-box {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 300px;
+    }
+    .register-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .register-table th {
+      background-color: #2c3e50;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .register-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .register-table tr:hover {
+      background-color: #f9f9f9;
+    }
+    .register-table tr:last-child td {
+      border-bottom: none;
+    }
+    .observation-details {
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .observation-details.expanded {
+      white-space: normal;
+      overflow: visible;
+    }
+    .details-btn {
+      background: none;
+      border: none;
+      color: #3498db;
+      cursor: pointer;
+      padding: 0;
+      font-size: 12px;
+    }
+    .export-btn {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .export-btn:hover {
+      background-color: #219653;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .page-btn {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .page-btn.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+    
+    /* Стили для статусов */
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+      min-width: 80px;
+      text-align: center;
+    }
+    .status-open {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .status-closed {
+      background-color: #95a5a6;
+      color: white;
+    }
+    .status-pending {
+      background-color: #f39c12;
+      color: white;
+    }
+    .status-overdue {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    /* Стили для выпадающего списка статуса */
+    .status-select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-size: 12px;
+      background-color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Парольная защита -->
+  <script>
+    const ADMIN_PASSWORD = "April2025!";
+    let isAuthenticated = sessionStorage.getItem('isafe_admin') === 'true';
+    
+    if (!isAuthenticated) {
+      const password = prompt("Введите пароль для доступа к админ-панели:");
+      if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem('isafe_admin', 'true');
+      } else {
+        alert("Неверный пароль! Доступ запрещен.");
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+
+  <div class="container">
+    <header>
+      <h1>Админ-панель i-SAFE - Наблюдения за опасностями</h1>
+    </header>
+
+    <!-- Вкладки -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="statistics">📊 Статистика</button>
+      <button class="tab-btn" data-tab="register">📋 Регистр наблюдений</button>
+      <button class="tab-btn" data-tab="export">📤 Экспорт данных</button>
+    </div>
+
+    <!-- Вкладка статистики -->
+    <div id="statistics-tab" class="tab-content active">
+      <div class="controls">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button id="refresh-btn">🔄 Обновить статистику</button>
+          <div class="status-info">
+            <span class="status-dot status-online" id="status-dot"></span>
+            <span id="status-text">Загрузка данных...</span>
+          </div>
+        </div>
+        
+        <div class="filter-controls">
+          <div class="period-selector">
+            <button class="period-btn active" data-period="all">Все время</button>
+            <button class="period-btn" data-period="month">За месяц</button>
+            <button class="period-btn" data-period="week">За неделю</button>
+            <button class="period-btn" data-period="today">Сегодня</button>
+          </div>
+          <select id="filter-company">
+            <option value="">Все компании</option>
+          </select>
+          <select id="filter-area">
+            <option value="">Все зоны</option>
+          </select>
+          <input type="date" id="filter-date-from" placeholder="С даты">
+          <input type="date" id="filter-date-to" placeholder="По дату">
+          <button id="reset-filters" style="background-color: #95a5a6;">Сбросить</button>
+        </div>
+        
+        <div>
+          <button id="back-to-form-btn" style="background-color: #27ae60;">← К форме наблюдения</button>
+        </div>
+      </div>
+
+      <!-- Сводная статистика -->
+      <div class="summary-stats" id="summary-stats">
+        <div class="stat-card">
+          <div class="stat-label">Всего наблюдений</div>
+          <div class="stat-value" id="total-observations">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Небезопасные условия</div>
+          <div class="stat-value" id="unsafe-conditions">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Небезопасные действия</div>
+          <div class="stat-value" id="unsafe-actions">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Работа остановлена</div>
+          <div class="stat-value" id="work-stopped">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Открытые замечания</div>
+          <div class="stat-value" id="open-observations">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Закрытые замечания</div>
+          <div class="stat-value" id="closed-observations">0</div>
+        </div>
+      </div>
+
+      <!-- Графики -->
+      <div class="charts-container" id="charts-container">
+        <div class="loading-message">Загрузка графиков...</div>
+      </div>
+    </div>
+
+    <!-- Вкладка регистра -->
+    <div id="register-tab" class="tab-content">
+      <div class="register-container">
+        <div class="register-controls">
+          <div>
+            <input type="text" id="search-input" class="search-box" placeholder="Поиск по наблюдателю, компании, зоне...">
+            <button id="search-btn" style="margin-left: 10px;">🔍 Поиск</button>
+          </div>
+          <div>
+            <button id="export-excel-btn" class="export-btn">📥 Экспорт в Excel</button>
+          </div>
+        </div>
+
+        <div id="register-table-container">
+          <table class="register-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Наблюдатель</th>
+                <th>Компания наблюдателя</th>
+                <th>Компания наблюдаемая</th>
+                <th>Зона</th>
+                <th>Тип наблюдения</th>
+                <th>Статус</th>
+                <th>Остановка работы</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="register-table-body">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div class="loading-message">Загрузка данных регистра...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="pagination">
+          <!-- Пагинация будет генерироваться скриптом -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Вкладка экспорта -->
+    <div id="export-tab" class="tab-content">
+      <div style="padding: 40px; text-align: center;">
+        <h2>Экспорт данных</h2>
+        <p style="margin-bottom: 30px;">Выберите формат и параметры экспорта данных наблюдений</p>
+        
+        <div style="max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 30px; border-radius: 10px;">
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Формат экспорта:</label>
+              <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="export-excel-full" class="export-btn" style="background-color: #27ae60;">📊 Excel (полные данные)</button>
+                <button id="export-csv" class="export-btn" style="background-color: #3498db;">📈 CSV (для анализа)</button>
+                <button id="export-pdf" class="export-btn" style="background-color: #e74c3c;">📄 PDF (отчет)</button>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 10px; font-weight: 600;">Период данных:</label>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                <input type="date" id="export-date-from" style="padding: 8px;">
+                <span>по</span>
+                <input type="date" id="export-date-to" style="padding: 8px;">
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 10px; font-weight: 600;">Статус наблюдений:</label>
+              <select id="export-status" style="padding: 8px; width: 200px;">
+                <option value="all">Все статусы</option>
+                <option value="open">Открытые</option>
+                <option value="closed">Закрытые</option>
+                <option value="pending">В процессе</option>
+              </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 10px; font-weight: 600;">Тип наблюдений:</label>
+              <select id="export-type" style="padding: 8px; width: 200px;">
+                <option value="all">Все наблюдения</option>
+                <option value="unsafe-condition">Небезопасные условия</option>
+                <option value="unsafe-action">Небезопасные действия</option>
+              </select>
+            </div>
+            
+            <button id="start-export" style="background-color: #9b59b6; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">
+              🚀 Начать экспорт
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для деталей наблюдения -->
+  <div id="observation-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 10px; padding: 30px; position: relative;">
+      <button id="close-modal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">×</button>
+      <h2 style="margin-top: 0; color: #2c3e50;">Детали наблюдения</h2>
+      <div id="modal-content">
+        <!-- Детали будут заполнены скриптом -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Конфигурация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpI00DhnV2AqrVxE7eJ5nLyo7icFobLoU",
+      authDomain: "i-safe-8aff1.firebaseapp.com",
+      projectId: "i-safe-8aff1",
+      storageBucket: "i-safe-8aff1.firebasestorage.app",
+      messagingSenderId: "721183035804",
+      appId: "1:721183035804:web:f81eba42fe1f272c1f3859",
+      measurementId: "G-5737V4DSJJ"
+    };
+
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      // ========== ОБЩИЕ ПЕРЕМЕННЫЕ ==========
+      let allObservations = [];
+      let currentCharts = [];
+      let selectedPeriod = 'all';
+      let currentPage = 1;
+      const itemsPerPage = 20;
+      
+      // ========== УПРАВЛЕНИЕ ВКЛАДКАМИ ==========
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const tabId = button.dataset.tab;
+          
+          // Убираем активный класс у всех кнопок и контента
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Добавляем активный класс текущей кнопке и контенту
+          button.classList.add('active');
+          document.getElementById(`${tabId}-tab`).classList.add('active');
+          
+          // Если перешли на вкладку регистра, загружаем данные
+          if (tabId === 'register') {
+            loadRegisterData();
+          }
+        });
+      });
+      
+      // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+      async function loadObservationsFromFirebase() {
+        console.log("Загрузка наблюдений из Firebase...");
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        
+        statusDot.className = 'status-dot status-loading';
+        statusText.textContent = 'Загрузка данных...';
+        
+        try {
+          const querySnapshot = await db.collection("observations").orderBy("observationDate", "desc").get();
+          const observations = [];
+          
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const observationDate = data.observationDate ? data.observationDate.toDate() : new Date();
+            
+            // Проверяем наличие статуса, по умолчанию "open"
+            let status = data.status || 'open';
+            
+            observations.push({
+              id: doc.id,
+              ...data,
+              observationDate: observationDate,
+              status: status,
+              // Устанавливаем статус по умолчанию при отправке
+              statusHistory: data.statusHistory || [
+                {
+                  status: 'open',
+                  date: observationDate,
+                  comment: 'Замечание создано'
+                }
+              ]
+            });
+          });
+          
+          console.log(`Загружено ${observations.length} наблюдений`);
+          
+          statusDot.className = 'status-dot status-online';
+          statusText.textContent = `Данные загружены: ${observations.length} наблюдений`;
+          
+          return observations;
+        } catch (error) {
+          console.error("Ошибка загрузки данных:", error);
+          statusDot.className = 'status-dot status-offline';
+          statusText.textContent = 'Ошибка загрузки данных';
+          return [];
+        }
+      }
+      
+      // Функция обновления статуса наблюдения
+      async function updateObservationStatus(observationId, newStatus, comment = '') {
+        try {
+          const observationRef = db.collection("observations").doc(observationId);
+          const observation = allObservations.find(obs => obs.id === observationId);
+          
+          if (!observation) {
+            throw new Error('Наблюдение не найдено');
+          }
+          
+          // Обновляем статус истории
+          const statusHistory = observation.statusHistory || [];
+          statusHistory.push({
+            status: newStatus,
+            date: new Date(),
+            comment: comment || `Статус изменен на "${getStatusText(newStatus)}"`
+          });
+          
+          // Обновляем документ в Firebase
+          await observationRef.update({
+            status: newStatus,
+            statusHistory: statusHistory,
+            updatedAt: new Date()
+          });
+          
+          // Обновляем локальные данные
+          const index = allObservations.findIndex(obs => obs.id === observationId);
+          if (index !== -1) {
+            allObservations[index].status = newStatus;
+            allObservations[index].statusHistory = statusHistory;
+            allObservations[index].updatedAt = new Date();
+          }
+          
+          console.log(`Статус наблюдения ${observationId} обновлен на ${newStatus}`);
+          return true;
+        } catch (error) {
+          console.error('Ошибка обновления статуса:', error);
+          return false;
+        }
+      }
+      
+      // Функция получения текста статуса
+      function getStatusText(status) {
+        const statusMap = {
+          'open': 'Открыто',
+          'closed': 'Закрыто',
+          'pending': 'В процессе',
+          'overdue': 'Просрочено'
+        };
+        return statusMap[status] || status;
+      }
+      
+      // Функция получения класса для статуса
+      function getStatusClass(status) {
+        const classMap = {
+          'open': 'status-open',
+          'closed': 'status-closed',
+          'pending': 'status-pending',
+          'overdue': 'status-overdue'
+        };
+        return classMap[status] || 'status-pending';
+      }
+      
+      // ========== ФУНКЦИИ ДЛЯ РЕГИСТРА ==========
+      async function loadRegisterData(searchTerm = '') {
+        const tableBody = document.getElementById('register-table-body');
+        const pagination = document.getElementById('pagination');
+        
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 40px;">
+              <div class="loading-message">Загрузка данных регистра...</div>
+            </td>
+          </tr>
+        `;
+        
+        try {
+          // Загружаем данные
+          if (allObservations.length === 0) {
+            allObservations = await loadObservationsFromFirebase();
+          }
+          
+          // Фильтруем по поисковому запросу
+          let filteredObservations = allObservations;
+          if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            filteredObservations = allObservations.filter(item => 
+              (item.name && item.name.toLowerCase().includes(searchLower)) ||
+              (item.companyObserver && item.companyObserver.toLowerCase().includes(searchLower)) ||
+              (item.companyObserved && item.companyObserved.toLowerCase().includes(searchLower)) ||
+              (item.areaText && item.areaText.toLowerCase().includes(searchLower)) ||
+              (item.typeObservationText && item.typeObservationText.toLowerCase().includes(searchLower)) ||
+              (item.status && getStatusText(item.status).toLowerCase().includes(searchLower))
+            );
+          }
+          
+          // Пагинация
+          const totalPages = Math.ceil(filteredObservations.length / itemsPerPage);
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const pageObservations = filteredObservations.slice(startIndex, endIndex);
+          
+          // Очищаем таблицу
+          tableBody.innerHTML = '';
+          
+          if (pageObservations.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div style="color: #7f8c8d;">Нет данных для отображения</div>
+                </td>
+              </tr>
+            `;
+          } else {
+            // Заполняем таблицу
+            pageObservations.forEach(observation => {
+              const row = document.createElement('tr');
+              
+              const date = observation.observationDate ? 
+                observation.observationDate.toLocaleDateString('ru-RU') : 
+                'Не указана';
+              
+              const swaText = observation.swa === 'Да' || observation.swa === true ? 
+                '<span style="color: #e74c3c; font-weight: bold;">Да</span>' : 
+                'Нет';
+              
+              const statusText = getStatusText(observation.status);
+              const statusClass = getStatusClass(observation.status);
+              
+              row.innerHTML = `
+                <td>${date}</td>
+                <td>${observation.name || 'Не указан'}</td>
+                <td>${observation.companyObserver || 'Не указана'}</td>
+                <td>${observation.companyObserved || 'Не указана'}</td>
+                <td>${observation.areaText || observation.area || 'Не указана'}</td>
+                <td>${observation.typeObservationText || observation.typeObservation || 'Не указан'}</td>
+                <td>
+                  <select class="status-select" data-id="${observation.id}" style="background-color: var(--status-color);">
+                    <option value="open" ${observation.status === 'open' ? 'selected' : ''}>Открыто</option>
+                    <option value="pending" ${observation.status === 'pending' ? 'selected' : ''}>В процессе</option>
+                    <option value="closed" ${observation.status === 'closed' ? 'selected' : ''}>Закрыто</option>
+                    <option value="overdue" ${observation.status === 'overdue' ? 'selected' : ''}>Просрочено</option>
+                  </select>
+                </td>
+                <td>${swaText}</td>
+                <td>
+                  <button class="details-btn" data-id="${observation.id || ''}">
+                    Просмотреть
+                  </button>
+                </td>
+              `;
+              
+              tableBody.appendChild(row);
+              
+              // Устанавливаем цвет фона для select в зависимости от статуса
+              const statusSelect = row.querySelector('.status-select');
+              switch(observation.status) {
+                case 'open':
+                  statusSelect.style.backgroundColor = '#2ecc71';
+                  statusSelect.style.color = 'white';
+                  break;
+                case 'closed':
+                  statusSelect.style.backgroundColor = '#95a5a6';
+                  statusSelect.style.color = 'white';
+                  break;
+                case 'pending':
+                  statusSelect.style.backgroundColor = '#f39c12';
+                  statusSelect.style.color = 'white';
+                  break;
+                case 'overdue':
+                  statusSelect.style.backgroundColor = '#e74c3c';
+                  statusSelect.style.color = 'white';
+                  break;
+              }
+            });
+            
+            // Добавляем обработчики для кнопок просмотра
+            document.querySelectorAll('.details-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const observationId = this.dataset.id;
+                showObservationDetails(observationId);
+              });
+            });
+            
+            // Добавляем обработчики для изменения статуса
+            document.querySelectorAll('.status-select').forEach(select => {
+              select.addEventListener('change', async function() {
+                const observationId = this.dataset.id;
+                const newStatus = this.value;
+                
+                // Показываем подтверждение для закрытия замечания
+                if (newStatus === 'closed') {
+                  const comment = prompt('Введите комментарий для закрытия замечания:', 'Замечание устранено');
+                  if (comment === null) {
+                    this.value = this.getAttribute('data-old-value') || 'open';
+                    return;
+                  }
+                  
+                  const success = await updateObservationStatus(observationId, newStatus, comment);
+                  if (success) {
+                    alert('Статус успешно обновлен!');
+                    // Обновляем цвет select
+                    this.style.backgroundColor = '#95a5a6';
+                    this.style.color = 'white';
+                  } else {
+                    alert('Ошибка при обновлении статуса');
+                    this.value = this.getAttribute('data-old-value') || 'open';
+                  }
+                } else {
+                  // Для других статусов просто обновляем
+                  const success = await updateObservationStatus(observationId, newStatus);
+                  if (success) {
+                    // Обновляем цвет select
+                    switch(newStatus) {
+                      case 'open':
+                        this.style.backgroundColor = '#2ecc71';
+                        this.style.color = 'white';
+                        break;
+                      case 'pending':
+                        this.style.backgroundColor = '#f39c12';
+                        this.style.color = 'white';
+                        break;
+                      case 'overdue':
+                        this.style.backgroundColor = '#e74c3c';
+                        this.style.color = 'white';
+                        break;
+                    }
+                  } else {
+                    alert('Ошибка при обновлении статуса');
+                    this.value = this.getAttribute('data-old-value') || 'open';
+                  }
+                }
+                
+                // Сохраняем старое значение
+                this.setAttribute('data-old-value', newStatus);
+                
+                // Обновляем статистику
+                updateSummaryStats();
+              });
+              
+              // Сохраняем начальное значение
+              select.setAttribute('data-old-value', select.value);
+            });
+          }
+          
+          // Обновляем пагинацию
+          updatePagination(totalPages);
+          
+        } catch (error) {
+          console.error('Ошибка загрузки регистра:', error);
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 40px; color: #e74c3c;">
+                Ошибка загрузки данных: ${error.message}
+              </td>
+            </tr>
+          `;
+        }
+      }
+      
+      function updatePagination(totalPages) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+        
+        if (totalPages <= 1) return;
+        
+        // Кнопка "Назад"
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '←';
+        prevBtn.className = 'page-btn';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            loadRegisterData(document.getElementById('search-input').value);
+          }
+        });
+        pagination.appendChild(prevBtn);
+        
+        // Нумерация страниц
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        if (endPage - startPage + 1 < maxVisiblePages) {
+          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+          const pageBtn = document.createElement('button');
+          pageBtn.textContent = i;
+          pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+          pageBtn.addEventListener('click', () => {
+            currentPage = i;
+            loadRegisterData(document.getElementById('search-input').value);
+          });
+          pagination.appendChild(pageBtn);
+        }
+        
+        // Кнопка "Вперед"
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→';
+        nextBtn.className = 'page-btn';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            loadRegisterData(document.getElementById('search-input').value);
+          }
+        });
+        pagination.appendChild(nextBtn);
+      }
+      
+      function showObservationDetails(observationId) {
+        const observation = allObservations.find(obs => obs.id === observationId);
+        if (!observation) return;
+        
+        const modal = document.getElementById('observation-modal');
+        const modalContent = document.getElementById('modal-content');
+        
+        // Форматируем дату
+        const date = observation.observationDate ? 
+          observation.observationDate.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : 'Не указана';
+        
+        // Форматируем историю статусов
+        let statusHistoryHtml = '<p>История статусов отсутствует</p>';
+        if (observation.statusHistory && observation.statusHistory.length > 0) {
+          statusHistoryHtml = '<div style="margin-top: 20px;">';
+          observation.statusHistory.forEach(history => {
+            const historyDate = history.date && history.date.toDate ? 
+              history.date.toDate().toLocaleDateString('ru-RU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'Не указана';
+            
+            statusHistoryHtml += `
+              <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                <div><strong>${getStatusText(history.status)}</strong> - ${historyDate}</div>
+                <div style="color: #7f8c8d; font-size: 14px;">${history.comment || 'Без комментария'}</div>
+              </div>
+            `;
+          });
+          statusHistoryHtml += '</div>';
+        }
+        
+        // Создаем HTML с деталями
+        modalContent.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+              <h3 style="color: #2c3e50; margin-top: 0;">Основная информация</h3>
+              <p><strong>Дата наблюдения:</strong> ${date}</p>
+              <p><strong>Наблюдатель:</strong> ${observation.name || 'Не указан'}</p>
+              <p><strong>Компания наблюдателя:</strong> ${observation.companyObserver || 'Не указана'}</p>
+              <p><strong>Компания наблюдаемая:</strong> ${observation.companyObserved || 'Не указана'}</p>
+              <p><strong>Зона/Локация:</strong> ${observation.areaText || observation.area || 'Не указана'}</p>
+            </div>
+            <div>
+              <h3 style="color: #2c3e50; margin-top: 0;">Детали наблюдения</h3>
+              <p><strong>Тип наблюдения:</strong> ${observation.typeObservationText || observation.typeObservation || 'Не указан'}</p>
+              <p><strong>Статус:</strong> <span class="status-badge ${getStatusClass(observation.status)}">${getStatusText(observation.status)}</span></p>
+              <p><strong>Работа остановлена:</strong> ${observation.swa === 'Да' || observation.swa === true ? 'Да' : 'Нет'}</p>
+              <p><strong>Опасные факторы:</strong> ${Array.isArray(observation.typeHazard) ? observation.typeHazard.join(', ') : (observation.typeHazard || 'Не указаны')}</p>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #2c3e50;">Обнаружение (Что я вижу?)</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+              ${observation.detection || 'Не указано'}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #2c3e50;">Реакция (Что я делаю?)</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+              ${observation.reaction || 'Не указано'}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #2c3e50;">Решение (Как исправить?)</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+              ${observation.solution || 'Не указано'}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h3 style="color: #2c3e50;">История статусов</h3>
+            ${statusHistoryHtml}
+          </div>
+          
+          ${observation.photoUrl ? `
+            <div>
+              <h3 style="color: #2c3e50;">Фотография</h3>
+              <img src="${observation.photoUrl}" alt="Фото наблюдения" style="max-width: 100%; border-radius: 5px;">
+            </div>
+          ` : ''}
+        `;
+        
+        // Показываем модальное окно
+        modal.style.display = 'flex';
+      }
+      
+      // ========== ФУНКЦИИ ДЛЯ СТАТИСТИКИ ==========
+      function updateSummaryStats() {
+        if (allObservations.length === 0) return;
+        
+        // Подсчет статистики
+        const totalObservations = allObservations.length;
+        const unsafeConditions = allObservations.filter(obs => 
+          obs.typeObservation === 'unsafe-condition' || obs.typeObservationText === 'Небезопасное условие'
+        ).length;
+        const unsafeActions = allObservations.filter(obs => 
+          obs.typeObservation === 'unsafe-action' || obs.typeObservationText === 'Небезопасное действие'
+        ).length;
+        const workStopped = allObservations.filter(obs => 
+          obs.swa === 'Да' || obs.swa === true
+        ).length;
+        const openObservations = allObservations.filter(obs => 
+          obs.status === 'open'
+        ).length;
+        const closedObservations = allObservations.filter(obs => 
+          obs.status === 'closed'
+        ).length;
+        
+        // Обновляем DOM
+        document.getElementById('total-observations').textContent = totalObservations;
+        document.getElementById('unsafe-conditions').textContent = unsafeConditions;
+        document.getElementById('unsafe-actions').textContent = unsafeActions;
+        document.getElementById('work-stopped').textContent = workStopped;
+        document.getElementById('open-observations').textContent = openObservations;
+        document.getElementById('closed-observations').textContent = closedObservations;
+      }
+      
+      async function refreshData() {
+        allObservations = await loadObservationsFromFirebase();
+        updateSummaryStats();
+        
+        // Если на вкладке регистра, обновляем таблицу
+        if (document.getElementById('register-tab').classList.contains('active')) {
+          loadRegisterData();
+        }
+      }
+      
+      // ========== ИНИЦИАЛИЗАЦИЯ ==========
+      function initEventListeners() {
+        // Кнопка обновления
+        document.getElementById('refresh-btn').addEventListener('click', refreshData);
+        
+        // Поиск в регистре
+        document.getElementById('search-btn').addEventListener('click', () => {
+          currentPage = 1;
+          const searchTerm = document.getElementById('search-input').value;
+          loadRegisterData(searchTerm);
+        });
+        
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            currentPage = 1;
+            const searchTerm = document.getElementById('search-input').value;
+            loadRegisterData(searchTerm);
+          }
+        });
+        
+        // Экспорт в Excel
+        document.getElementById('export-excel-btn').addEventListener('click', exportToExcel);
+        document.getElementById('export-excel-full').addEventListener('click', exportToExcel);
+        
+        // Закрытие модального окна
+        document.getElementById('close-modal').addEventListener('click', () => {
+          document.getElementById('observation-modal').style.display = 'none';
+        });
+        
+        // Клик по фону модального окна
+        document.getElementById('observation-modal').addEventListener('click', (e) => {
+          if (e.target.id === 'observation-modal') {
+            document.getElementById('observation-modal').style.display = 'none';
+          }
+        });
+        
+        // Кнопка "Назад к форме"
+        document.getElementById('back-to-form-btn').addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+      }
+      
+      // ========== ФУНКЦИИ ЭКСПОРТА ==========
+      function exportToExcel() {
+        if (allObservations.length === 0) {
+          alert('Нет данных для экспорта');
+          return;
+        }
+        
+        // Создаем CSV контент
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Заголовки
+        const headers = [
+          "Дата",
+          "Наблюдатель", 
+          "Компания наблюдателя",
+          "Компания наблюдаемая",
+          "Зона",
+          "Тип наблюдения",
+          "Статус",
+          "Опасные факторы",
+          "Обнаружение",
+          "Реакция",
+          "Решение",
+          "Остановка работы"
+        ];
+        csvContent += headers.join(";") + "\n";
+        
+        // Данные
+        allObservations.forEach(observation => {
+          const row = [
+            observation.observationDate ? observation.observationDate.toLocaleDateString('ru-RU') : '',
+            observation.name || '',
+            observation.companyObserver || '',
+            observation.companyObserved || '',
+            observation.areaText || observation.area || '',
+            observation.typeObservationText || observation.typeObservation || '',
+            getStatusText(observation.status) || '',
+            Array.isArray(observation.typeHazard) ? observation.typeHazard.join(', ') : (observation.typeHazard || ''),
+            observation.detection || '',
+            observation.reaction || '',
+            observation.solution || '',
+            observation.swa === 'Да' || observation.swa === true ? 'Да' : 'Нет'
+          ];
+          
+          // Экранируем специальные символы
+          const escapedRow = row.map(cell => {
+            if (typeof cell === 'string' && (cell.includes(';') || cell.includes('"') || cell.includes('\n'))) {
+              return '"' + cell.replace(/"/g, '""') + '"';
+            }
+            return cell;
+          });
+          
+          csvContent += escapedRow.join(";") + "\n";
+        });
+        
+        // Создаем ссылку для скачивания
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `isafe_observations_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        
+        link.click();
+        document.body.removeChild(link);
+        
+        alert(`Экспортировано ${allObservations.length} записей`);
+      }
+      
+      // ========== ЗАПУСК ==========
+      async function init() {
+        console.log('Админ-панель: Firebase инициализирован');
+        initEventListeners();
+        
+        // Загружаем данные при старте
+        await refreshData();
+        
+        // Устанавливаем даты по умолчанию
+        const today = new Date();
+        const monthAgo = new Date();
+        monthAgo.setDate(today.getDate() - 30);
+        document.getElementById('filter-date-from').valueAsDate = monthAgo;
+        document.getElementById('filter-date-to').valueAsDate = today;
+      }
+      
+      init();
+    });
+  </script>
+</body>
+</html>
