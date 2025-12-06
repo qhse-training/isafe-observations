@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSafe Traffic Light Observation Card</title>
+    
+    <!-- Подключение Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+        h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .observation-form {
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .factors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .factor-category {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .factor-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .factor-item:hover {
+            background-color: #f0f8ff;
+        }
+        .factor-item label {
+            margin: 0;
+            flex-grow: 1;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .factor-item input[type="checkbox"] {
+            margin-left: 10px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        .red-box {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .yellow-box {
+            background-color: #fffde7;
+            border: 2px solid #ffeb3b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .green-box {
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .color-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .red-header {
+            background-color: #f44336;
+            color: white;
+        }
+        .yellow-header {
+            background-color: #ffeb3b;
+            color: #333;
+        }
+        .green-header {
+            background-color: #4caf50;
+            color: white;
+        }
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .blue-box {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .stop-work-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+        .confirmation-message {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+            border-left: 5px solid #2196f3;
+            display: none;
+        }
+        .confirmation-code {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px auto;
+            display: inline-block;
+            border: 2px dashed #2196f3;
+            letter-spacing: 2px;
+        }
+        .confirmation-note {
+            font-size: 14px;
+            color: #546e7a;
+            margin-top: 15px;
+            font-style: italic;
+        }
+        .loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .language-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .lang-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .lang-btn:hover {
+            background: #f0f0f0;
+        }
+        .lang-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            .factors-grid {
+                grid-template-columns: 1fr;
+            }
+            .stop-work-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .confirmation-code {
+                font-size: 18px;
+                padding: 10px;
+            }
+            .language-selector {
+                position: static;
+                margin-bottom: 20px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <button class="lang-btn active" onclick="changeLanguage('ru')">🇷🇺 Русский</button>
+        <button class="lang-btn" onclick="changeLanguage('kz')">🇰🇿 Қазақша</button>
+        <button class="lang-btn" onclick="changeLanguage('en')">🇺🇸 English</button>
+    </div>
+
+    <div class="container">
+        <h1 id="main-title">Карта наблюдения iSafe Светофор</h1>
+        
+        <div class="blue-box">
+            <h3 id="observer-info">Информация о наблюдателе</h3>
+        </div>
+        
+        <!-- Форма наблюдения -->
+        <div id="observation-form-container">
+            <div class="observation-form">
+                <table>
+                    <tr>
+                        <th id="observer-name-label">ФИО наблюдателя</th>
+                        <th id="datetime-label">Дата и время</th>
+                    </tr>
+                    <tr>
+                        <td><input type="text" id="observer-name" required></td>
+                        <td><input type="datetime-local" id="datetime" required></td>
+                    </tr>
+                    <tr>
+                        <th id="observer-company-label">Компания наблюдателя</th>
+                        <th id="observation-company-label">Компания наблюдения</th>
+                    </tr>
+                    <tr>
+                        <td><input type="text" id="observer-company" required></td>
+                        <td><input type="text" id="observation-company" required></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">
+                            <label for="area" id="area-label">Зона/Участок</label>
+                            <input type="text" id="area" placeholder="" required>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">
+                            <label for="observation-type" id="observation-type-label">Выберите тип наблюдения:</label>
+                            <select id="observation-type" required>
+                                <option value="">Выберите тип наблюдения</option>
+                                <option value="unsafe-condition">Небезопасное условие</option>
+                                <option value="unsafe-action">Небезопасное действие</option>
+                                <option value="safe-condition">Безопасное условие</option>
+                                <option value="safe-action">Безопасное действие</option>
+                                <option value="no-consequence">Инцидент без последствий</option>
+                            </select>
+                        </th>
+                    </tr>
+                </table>
+
+                <div class="stop-work-section">
+                    <div><strong id="work-stopped-label">Остановил работу:</strong></div>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="stop-yes" name="work-stopped" value="Да">
+                            <label for="stop-yes" id="yes-label">Да</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="stop-no" name="work-stopped" value="Нет" checked>
+                            <label for="stop-no" id="no-label">Нет</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="red-box">
+                    <div class="color-header red-header" id="reaction-header">Реакция (Что я делаю?)</div>
+                    <textarea id="reaction" placeholder="" required></textarea>
+                </div>
+
+                <div class="yellow-box">
+                    <div class="color-header yellow-header" id="detection-header">Обнаружение (Что я вижу?)</div>
+                    <textarea id="detection" placeholder="" required></textarea>
+                </div>
+
+                <div class="green-box">
+                    <div class="color-header green-header" id="solution-header">Решение (Как это исправить?)</div>
+                    <textarea id="solution" placeholder="" required></textarea>
+                </div>
+            </div>
+
+            <h2 id="factors-title">Опасные и вредные факторы (отметьте соответствующие)</h2>
+            
+            <!-- Опасные и вредные факторы -->
+            <div class="factors-grid">
+                <div class="factor-category">
+                    <h3 id="physical-factors-title">1. Физические факторы</h3>
+                    <div class="factor-item">
+                        <label for="noise" id="noise-label">Шум</label>
+                        <input type="checkbox" id="noise" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="vibration" id="vibration-label">Вибрация</label>
+                        <input type="checkbox" id="vibration" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="radiation" id="radiation-label">Радиация</label>
+                        <input type="checkbox" id="radiation" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="temperature" id="temperature-label">Температура</label>
+                        <input type="checkbox" id="temperature" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="lighting" id="lighting-label">Освещение</label>
+                        <input type="checkbox" id="lighting" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="extreme_weather" id="extreme_weather-label">Работа в экстремальную погоду</label>
+                        <input type="checkbox" id="extreme_weather" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="height" id="height-label">Работа на высоте</label>
+                        <input type="checkbox" id="height" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="falling_objects" id="falling_objects-label">Падающие предметы</label>
+                        <input type="checkbox" id="falling_objects" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="slipping" id="slipping-label">Подскальзывание, Спотыкание</label>
+                        <input type="checkbox" id="slipping" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="heavy_equipment" id="heavy_equipment-label">Тяжёлая техника</label>
+                        <input type="checkbox" id="heavy_equipment" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="driving" id="driving-label">Вождение</label>
+                        <input type="checkbox" id="driving" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="hand_tools" id="hand_tools-label">Ручные и переносные инструменты</label>
+                        <input type="checkbox" id="hand_tools" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="high_pressure" id="high_pressure-label">Высокое давление</label>
+                        <input type="checkbox" id="high_pressure" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="rotating" id="rotating-label">Крутящиеся и вращающиеся</label>
+                        <input type="checkbox" id="rotating" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="flying_particles" id="flying_particles-label">Летящие частицы</label>
+                        <input type="checkbox" id="flying_particles" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="electrical" id="electrical-label">Электробезопасность</label>
+                        <input type="checkbox" id="electrical" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="lifting_operations" id="lifting_operations-label">Грузоподъемные работы</label>
+                        <input type="checkbox" id="lifting_operations" class="factor-checkbox">
+                    </div>
+                </div>
+
+                <div class="factor-category">
+                    <h3 id="chemical-bio-title">2. Химические и биологические факторы</h3>
+                    <div class="factor-item">
+                        <label for="chemical" id="chemical-label">Химическая опасность</label>
+                        <input type="checkbox" id="chemical" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="biological" id="biological-label">Биологическая опасность</label>
+                        <input type="checkbox" id="biological" class="factor-checkbox">
+                    </div>
+                    
+                    <h3 id="psycho-factors-title">3. Психофизиологические факторы</h3>
+                    <div class="factor-item">
+                        <label for="psychological" id="psychological-label">Психологический фактор</label>
+                        <input type="checkbox" id="psychological" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="ergonomics" id="ergonomics-label">Эргономика</label>
+                        <input type="checkbox" id="ergonomics" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="psychoactive" id="psychoactive-label">Психоактивные вещества</label>
+                        <input type="checkbox" id="psychoactive" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="manual_lifting" id="manual_lifting-label">Ручное перемещение грузов</label>
+                        <input type="checkbox" id="manual_lifting" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="vulnerable_workers" id="vulnerable_workers-label">Уязвимые работники</label>
+                        <input type="checkbox" id="vulnerable_workers" class="factor-checkbox">
+                    </div>
+                </div>
+
+                <div class="factor-category">
+                    <h3 id="organizational-factors-title">4. Организационные и поведенческие факторы</h3>
+                    <div class="factor-item">
+                        <label for="confined_space" id="confined_space-label">Замкнутое пространство</label>
+                        <input type="checkbox" id="confined_space" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="hot_work" id="hot_work-label">Огневые работы</label>
+                        <input type="checkbox" id="hot_work" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="earth_works" id="earth_works-label">Земляные работы</label>
+                        <input type="checkbox" id="earth_works" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="lockout" id="lockout-label">Блокировка/Маркировка</label>
+                        <input type="checkbox" id="lockout" class="factor-checkbox">
+                    </div>
+                    <div class="factor-item">
+                        <label for="fire_safety" id="fire_safety-label">Пожарная безопасность</label>
+                        <input type="checkbox" id="fire_safety" class="factor-checkbox">
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning" id="warning-text">
+                Останавливай небезопасную работу! Сообщай об опасности! Исправляй и продлевай!
+            </div>
+            
+            <!-- Сообщение об успешной отправке с кодом -->
+            <div class="confirmation-message" id="confirmation-message">
+                <h3 id="confirmation-title">🎉 Карта наблюдения успешно отправлена!</h3>
+                <p id="confirmation-text">Ваша карточка зарегистрирована в системе.</p>
+                
+                <div class="confirmation-code" id="confirmation-code">
+                    Загрузка...
+                </div>
+                
+                <p><strong id="confirmation-code-label">Код подтверждения:</strong> <span id="display-code">-</span></p>
+                
+                <p class="confirmation-note" id="confirmation-note">
+                    Запишите или сделайте скриншот этого кода.<br>
+                    Он понадобится для проверки статуса вашего наблюдения.
+                </p>
+                
+                <button class="submit-btn" onclick="printConfirmation()" style="background-color: #2196f3; margin-top: 15px;" id="print-btn">
+                    🖨️ Распечатать подтверждение
+                </button>
+                
+                <button class="submit-btn" onclick="sendNewObservation()" style="background-color: #4caf50; margin-top: 15px;" id="new-card-btn">
+                    📝 Отправить еще одну карточку
+                </button>
+            </div>
+            
+            <div class="success-message" id="success-message">
+                Карточка успешно отправлена!
+            </div>
+            
+            <div class="error-message" id="error-message">
+                Ошибка при отправке!
+            </div>
+
+            <!-- ИНСТРУКЦИЯ ДЛЯ РАБОТНИКОВ -->
+            <div style="margin: 30px auto; max-width: 600px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 14px;">
+                <h3 style="text-align: center; color: #2c3e50;" id="instruction-title">📱 Инструкция для работников</h3>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin: 15px 0; padding: 10px; background: white; border-radius: 5px;">
+                    <div style="font-size: 24px;">1️⃣</div>
+                    <div><strong id="step1-title">Заполните все поля формы</strong><br><span id="step1-text">ФИО, компания, зона, тип наблюдения</span></div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin: 15px 0; padding: 10px; background: white; border-radius: 5px;">
+                    <div style="font-size: 24px;">2️⃣</div>
+                    <div><strong id="step2-title">Опишите проблему</strong><br><span id="step2-text">Что видите, что делаете, как исправить</span></div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin: 15px 0; padding: 10px; background: white; border-radius: 5px;">
+                    <div style="font-size: 24px;">3️⃣</div>
+                    <div><strong id="step3-title">Отметьте опасные факторы</strong><br><span id="step3-text">Выберите из списка что относится</span></div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin: 15px 0; padding: 10px; background: white; border-radius: 5px;">
+                    <div style="font-size: 24px;">4️⃣</div>
+                    <div><strong id="step4-title">Нажмите "Отправить карточку"</strong><br><span id="step4-text">Получите код подтверждения от Firebase</span></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <small id="questions-text">📧 Вопросы? Обратитесь к руководителю или специалисту по охране труда</small>
+                </div>
+            </div>
+            
+            <!-- КНОПКИ -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="submit-btn" id="send-btn">Отправить карточку</button>
+                <button class="submit-btn" style="background-color: #6c757d;" id="clear-btn">Очистить форму</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpI00DhnV2AqrVxE7eJ5nLyo7icFobLoU",
+            authDomain: "i-safe-8aff1.firebaseapp.com",
+            projectId: "i-safe-8aff1",
+            storageBucket: "i-safe-8aff1.firebasestorage.app",
+            messagingSenderId: "721183035804",
+            appId: "1:721183035804:web:f81eba42fe1f272c1f3859",
+            measurementId: "G-5737V4DSJJ"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Глобальные переменные
+        let lastGeneratedCode = '';
+        let currentLanguage = 'ru';
+
+        // Локализация для всех трех языков
+        const translations = {
+            ru: {
+                // Основные элементы
+                'main-title': 'Карта наблюдения iSafe Светофор',
+                'observer-info': 'Информация о наблюдателе',
+                'observer-name-label': 'ФИО наблюдателя',
+                'datetime-label': 'Дата и время',
+                'observer-company-label': 'Компания наблюдателя',
+                'observation-company-label': 'Компания наблюдения',
+                'area-label': 'Зона/Участок',
+                'area-placeholder': 'Введите зону/участок (например: Цех №1, Склад, Офис и т.д.)',
+                'observation-type-label': 'Выберите тип наблюдения:',
+                'observation-types': {
+                    '': 'Выберите тип наблюдения',
+                    'unsafe-condition': 'Небезопасное условие',
+                    'unsafe-action': 'Небезопасное действие',
+                    'safe-condition': 'Безопасное условие',
+                    'safe-action': 'Безопасное действие',
+                    'no-consequence': 'Инцидент без последствий'
+                },
+                'work-stopped-label': 'Остановил работу:',
+                'yes-label': 'Да',
+                'no-label': 'Нет',
+                'reaction-header': 'Реакция (Что я делаю?)',
+                'reaction-placeholder': 'Опишите ваши действия...',
+                'detection-header': 'Обнаружение (Что я вижу?)',
+                'detection-placeholder': 'Опишите что вы наблюдаете...',
+                'solution-header': 'Решение (Как это исправить?)',
+                'solution-placeholder': 'Опишите предлагаемое решение...',
+                
+                // Факторы
+                'factors-title': 'Опасные и вредные факторы (отметьте соответствующие)',
+                'physical-factors-title': '1. Физические факторы',
+                'noise-label': 'Шум',
+                'vibration-label': 'Вибрация',
+                'radiation-label': 'Радиация',
+                'temperature-label': 'Температура',
+                'lighting-label': 'Освещение',
+                'extreme_weather-label': 'Работа в экстремальную погоду',
+                'height-label': 'Работа на высоте',
+                'falling_objects-label': 'Падающие предметы',
+                'slipping-label': 'Подскальзывание, Спотыкание',
+                'heavy_equipment-label': 'Тяжёлая техника',
+                'driving-label': 'Вождение',
+                'hand_tools-label': 'Ручные и переносные инструменты',
+                'high_pressure-label': 'Высокое давление',
+                'rotating-label': 'Крутящиеся и вращающиеся',
+                'flying_particles-label': 'Летящие частицы',
+                'electrical-label': 'Электробезопасность',
+                'lifting_operations-label': 'Грузоподъемные работы',
+                
+                'chemical-bio-title': '2. Химические и биологические факторы',
+                'chemical-label': 'Химическая опасность',
+                'biological-label': 'Биологическая опасность',
+                
+                'psycho-factors-title': '3. Психофизиологические факторы',
+                'psychological-label': 'Психологический фактор',
+                'ergonomics-label': 'Эргономика',
+                'psychoactive-label': 'Психоактивные вещества',
+                'manual_lifting-label': 'Ручное перемещение грузов',
+                'vulnerable_workers-label': 'Уязвимые работники',
+                
+                'organizational-factors-title': '4. Организационные и поведенческие факторы',
+                'confined_space-label': 'Замкнутое пространство',
+                'hot_work-label': 'Огневые работы',
+                'earth_works-label': 'Земляные работы',
+                'lockout-label': 'Блокировка/Маркировка',
+                'fire_safety-label': 'Пожарная безопасность',
+                
+                // Предупреждение
+                'warning-text': 'Останавливай небезопасную работу! Сообщай об опасности! Исправляй и продлевай!',
+                
+                // Подтверждение
+                'confirmation-title': '🎉 Карта наблюдения успешно отправлена!',
+                'confirmation-text': 'Ваша карточка зарегистрирована в системе.',
+                'confirmation-code-label': 'Код подтверждения:',
+                'confirmation-note': 'Запишите или сделайте скриншот этого кода.<br>Он понадобится для проверки статуса вашего наблюдения.',
+                'print-btn': '🖨️ Распечатать подтверждение',
+                'new-card-btn': '📝 Отправить еще одну карточку',
+                
+                // Инструкция
+                'instruction-title': '📱 Инструкция для работников',
+                'step1-title': 'Заполните все поля формы',
+                'step1-text': 'ФИО, компания, зона, тип наблюдения',
+                'step2-title': 'Опишите проблему',
+                'step2-text': 'Что видите, что делаете, как исправить',
+                'step3-title': 'Отметьте опасные факторы',
+                'step3-text': 'Выберите из списка что относится',
+                'step4-title': 'Нажмите "Отправить карточку"',
+                'step4-text': 'Получите код подтверждения от Firebase',
+                'questions-text': '📧 Вопросы? Обратитесь к руководителю или специалисту по охране труда',
+                
+                // Кнопки
+                'send-btn': 'Отправить карточку',
+                'clear-btn': 'Очистить форму',
+                
+                // Сообщения
+                'success-message': 'Карточка успешно отправлена!',
+                'error-message': 'Ошибка при отправке!',
+                'validation-messages': {
+                    'required-field': 'Пожалуйста, заполните: ',
+                    'select-type': 'Пожалуйста, выберите тип наблюдения',
+                    'offline-save': '⚠️ Сохранено локально (офлайн режим). Данные синхронизируются при восстановлении связи.',
+                    'firebase-error': '⚠️ Сохранено локально (ошибка Firebase). Данные синхронизируются при восстановлении связи.',
+                    'connection-restored': 'Соединение восстановлено. Синхронизация данных...',
+                    'connection-lost': 'Нет подключения к интернету. Данные будут сохранены локально.'
+                }
+            },
+            kz: {
+                // Основные элементы
+                'main-title': 'iSafe Байқау картасы',
+                'observer-info': 'Бақылаушы туралы ақпарат',
+                'observer-name-label': 'Бақылаушының ТАӘ',
+                'datetime-label': 'Күні мен уақыты',
+                'observer-company-label': 'Бақылаушы компаниясы',
+                'observation-company-label': 'Бақылау компаниясы',
+                'area-label': 'Аймақ/Учаске',
+                'area-placeholder': 'Аймақ/участкені енгізіңіз (мысалы: №1 цех, Қойма, Кеңсе, т.б.)',
+                'observation-type-label': 'Бақау түрін таңдаңыз:',
+                'observation-types': {
+                    '': 'Бақау түрін таңдаңыз',
+                    'unsafe-condition': 'Қауіпсіз емес жағдай',
+                    'unsafe-action': 'Қауіпсіз емес әрекет',
+                    'safe-condition': 'Қауіпсіз жағдай',
+                    'safe-action': 'Қауіпсіз әрекет',
+                    'no-consequence': 'Саңсыз инцидент'
+                },
+                'work-stopped-label': 'Жұмысты тоқтатты:',
+                'yes-label': 'Иә',
+                'no-label': 'Жоқ',
+                'reaction-header': 'Реакция (Мен не істеймін?)',
+                'reaction-placeholder': 'Әрекеттеріңізді сипаттаңыз...',
+                'detection-header': 'Анықтау (Мен не көремін?)',
+                'detection-placeholder': 'Бақылағандарыңызды сипаттаңыз...',
+                'solution-header': 'Шешім (Мұны қалай түзетуге болады?)',
+                'solution-placeholder': 'Ұсынылатын шешімді сипаттаңыз...',
+                
+                // Факторы
+                'factors-title': 'Қауіпті және зиянды факторлар (тиістілерін белгілеңіз)',
+                'physical-factors-title': '1. Физикалық факторлар',
+                'noise-label': 'Шу',
+                'vibration-label': 'Діріл',
+                'radiation-label': 'Сәулелену',
+                'temperature-label': 'Температура',
+                'lighting-label': 'Жарықтандыру',
+                'extreme_weather-label': 'Төтенше ауа райында жұмыс',
+                'height-label': 'Биіктікте жұмыс',
+                'falling_objects-label': 'Құлайтын заттар',
+                'slipping-label': 'Тайып кету, Таяқталу',
+                'heavy_equipment-label': 'Ауыр техника',
+                'driving-label': 'Жүргізу',
+                'hand_tools-label': 'Қол және портативті құралдар',
+                'high_pressure-label': 'Жоғары қысым',
+                'rotating-label': 'Айналушы және бұралушы',
+                'flying_particles-label': 'Ұшатын бөлшектер',
+                'electrical-label': 'Электрқауіпсіздік',
+                'lifting_operations-label': 'Көтеру жұмыстары',
+                
+                'chemical-bio-title': '2. Химиялық және биологиялық факторлар',
+                'chemical-label': 'Химиялық қауіп',
+                'biological-label': 'Биологиялық қауіп',
+                
+                'psycho-factors-title': '3. Психофизиологиялық факторлар',
+                'psychological-label': 'Психологиялық фактор',
+                'ergonomics-label': 'Эргономика',
+                'psychoactive-label': 'Психоактивті заттар',
+                'manual_lifting-label': 'Жүкті қолмен тасымалдау',
+                'vulnerable_workers-label': 'Осал жұмысшылар',
+                
+                'organizational-factors-title': '4. Ұйымдастырушылық және мінез-құлық факторлары',
+                'confined_space-label': 'Жабық кеңістік',
+                'hot_work-label': 'Отпен жұмыс',
+                'earth_works-label': 'Топырақ жұмыстары',
+                'lockout-label': 'Блоктау/Белгілеу',
+                'fire_safety-label': 'Өрт қауіпсіздігі',
+                
+                // Предупреждение
+                'warning-text': 'Қауіпсіз емес жұмысты тоқтат! Қауіп туралы хабарла! Түзет және жалғастыр!',
+                
+                // Подтверждение
+                'confirmation-title': '🎉 Байқау картасы сәтті жіберілді!',
+                'confirmation-text': 'Сіздің карточкаңыз жүйеде тіркелді.',
+                'confirmation-code-label': 'Растау коды:',
+                'confirmation-note': 'Бұл кодты жазып алыңыз немесе скриншот жасаңыз.<br>Ол сіздің бақылауыңыздың күйін тексеру үшін қажет болады.',
+                'print-btn': '🖨️ Растауды басып шығару',
+                'new-card-btn': '📝 Тағы бір карточка жіберу',
+                
+                // Инструкция
+                'instruction-title': '📱 Жұмысшыларға арналған нұсқаулық',
+                'step1-title': 'Барлық өрістерді толтырыңыз',
+                'step1-text': 'ТАӘ, компания, аймақ, бақылау түрі',
+                'step2-title': 'Мәселені сипаттаңыз',
+                'step2-text': 'Не көріп тұрсыз, не істейсіз, қалай түзетуге болады',
+                'step3-title': 'Қауіпті факторларды белгілеңіз',
+                'step3-text': 'Тізімнен тиістілерін таңдаңыз',
+                'step4-title': '"Карточканы жіберу" түймесін басыңыз',
+                'step4-text': 'Firebase-тен растау кодын алыңыз',
+                'questions-text': '📧 Сұрақтарыңыз бар ма? Жетекшіге немесе еңбекті қорғау маманына хабарласыңыз',
+                
+                // Кнопки
+                'send-btn': 'Карточканы жіберу',
+                'clear-btn': 'Форманы тазарту',
+                
+                // Сообщения
+                'success-message': 'Карточка сәтті жіберілді!',
+                'error-message': 'Жіберу кезінде қате!',
+                'validation-messages': {
+                    'required-field': 'Өтінеміз, толтырыңыз: ',
+                    'select-type': 'Өтінеміз, бақылау түрін таңдаңыз',
+                    'offline-save': '⚠️ Жергілікті сақталды (офлайн режим). Байланыс қалпына келтірілгенде деректер синхрондалады.',
+                    'firebase-error': '⚠️ Жергілікті сақталды (Firebase қатесі). Байланыс қалпына келтірілгенде деректер синхрондалады.',
+                    'connection-restored': 'Байланыс қалпына келтірілді. Деректер синхрондалуда...',
+                    'connection-lost': 'Интернет байланысы жоқ. Деректер жергілікті сақталады.'
+                }
+            },
+            en: {
+                // Основные элементы
+                'main-title': 'iSafe Traffic Light Observation Card',
+                'observer-info': 'Observer Information',
+                'observer-name-label': 'Observer Full Name',
+                'datetime-label': 'Date and Time',
+                'observer-company-label': 'Observer Company',
+                'observation-company-label': 'Observed Company',
+                'area-label': 'Area/Zone',
+                'area-placeholder': 'Enter area/zone (e.g., Workshop #1, Warehouse, Office, etc.)',
+                'observation-type-label': 'Select observation type:',
+                'observation-types': {
+                    '': 'Select observation type',
+                    'unsafe-condition': 'Unsafe Condition',
+                    'unsafe-action': 'Unsafe Action',
+                    'safe-condition': 'Safe Condition',
+                    'safe-action': 'Safe Action',
+                    'no-consequence': 'Near Miss'
+                },
+                'work-stopped-label': 'Stopped work:',
+                'yes-label': 'Yes',
+                'no-label': 'No',
+                'reaction-header': 'Reaction (What am I doing?)',
+                'reaction-placeholder': 'Describe your actions...',
+                'detection-header': 'Detection (What do I see?)',
+                'detection-placeholder': 'Describe what you observe...',
+                'solution-header': 'Solution (How to fix it?)',
+                'solution-placeholder': 'Describe proposed solution...',
+                
+                // Факторы
+                'factors-title': 'Hazardous Factors (check appropriate ones)',
+                'physical-factors-title': '1. Physical Factors',
+                'noise-label': 'Noise',
+                'vibration-label': 'Vibration',
+                'radiation-label': 'Radiation',
+                'temperature-label': 'Temperature',
+                'lighting-label': 'Lighting',
+                'extreme_weather-label': 'Work in Extreme Weather',
+                'height-label': 'Work at Height',
+                'falling_objects-label': 'Falling Objects',
+                'slipping-label': 'Slipping, Tripping',
+                'heavy_equipment-label': 'Heavy Equipment',
+                'driving-label': 'Driving',
+                'hand_tools-label': 'Hand and Portable Tools',
+                'high_pressure-label': 'High Pressure',
+                'rotating-label': 'Rotating and Revolving',
+                'flying_particles-label': 'Flying Particles',
+                'electrical-label': 'Electrical Safety',
+                'lifting_operations-label': 'Lifting Operations',
+                
+                'chemical-bio-title': '2. Chemical and Biological Factors',
+                'chemical-label': 'Chemical Hazard',
+                'biological-label': 'Biological Hazard',
+                
+                'psycho-factors-title': '3. Psychophysiological Factors',
+                'psychological-label': 'Psychological Factor',
+                'ergonomics-label': 'Ergonomics',
+                'psychoactive-label': 'Psychoactive Substances',
+                'manual_lifting-label': 'Manual Load Handling',
+                'vulnerable_workers-label': 'Vulnerable Workers',
+                
+                'organizational-factors-title': '4. Organizational and Behavioral Factors',
+                'confined_space-label': 'Confined Space',
+                'hot_work-label': 'Hot Work',
+                'earth_works-label': 'Earth Works',
+                'lockout-label': 'Lockout/Tagout',
+                'fire_safety-label': 'Fire Safety',
+                
+                // Предупреждение
+                'warning-text': 'Stop unsafe work! Report the hazard! Fix and continue!',
+                
+                // Подтверждение
+                'confirmation-title': '🎉 Observation Card Successfully Sent!',
+                'confirmation-text': 'Your card has been registered in the system.',
+                'confirmation-code-label': 'Confirmation Code:',
+                'confirmation-note': 'Write down or take a screenshot of this code.<br>It will be needed to check the status of your observation.',
+                'print-btn': '🖨️ Print Confirmation',
+                'new-card-btn': '📝 Send Another Card',
+                
+                // Инструкция
+                'instruction-title': '📱 Employee Instructions',
+                'step1-title': 'Fill in all form fields',
+                'step1-text': 'Full name, company, area, observation type',
+                'step2-title': 'Describe the problem',
+                'step2-text': 'What you see, what you do, how to fix it',
+                'step3-title': 'Mark hazardous factors',
+                'step3-text': 'Select from the list what applies',
+                'step4-title': 'Click "Send Card"',
+                'step4-text': 'Receive confirmation code from Firebase',
+                'questions-text': '📧 Questions? Contact your supervisor or HSE specialist',
+                
+                // Кнопки
+                'send-btn': 'Send Card',
+                'clear-btn': 'Clear Form',
+                
+                // Сообщения
+                'success-message': 'Card successfully sent!',
+                'error-message': 'Error sending!',
+                'validation-messages': {
+                    'required-field': 'Please fill in: ',
+                    'select-type': 'Please select observation type',
+                    'offline-save': '⚠️ Saved locally (offline mode). Data will sync when connection is restored.',
+                    'firebase-error': '⚠️ Saved locally (Firebase error). Data will sync when connection is restored.',
+                    'connection-restored': 'Connection restored. Syncing data...',
+                    'connection-lost': 'No internet connection. Data will be saved locally.'
+                }
+            }
+        };
+
+        // Функция смены языка
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Обновляем активную кнопку языка
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Получаем переводы для выбранного языка
+            const t = translations[lang];
+            
+            // Обновляем тексты
+            document.getElementById('main-title').textContent = t['main-title'];
+            document.getElementById('observer-info').textContent = t['observer-info'];
+            document.getElementById('observer-name-label').textContent = t['observer-name-label'];
+            document.getElementById('datetime-label').textContent = t['datetime-label'];
+            document.getElementById('observer-company-label').textContent = t['observer-company-label'];
+            document.getElementById('observation-company-label').textContent = t['observation-company-label'];
+            document.getElementById('area-label').textContent = t['area-label'];
+            document.getElementById('area').placeholder = t['area-placeholder'];
+            document.getElementById('observation-type-label').textContent = t['observation-type-label'];
+            document.getElementById('work-stopped-label').innerHTML = '<strong>' + t['work-stopped-label'] + '</strong>';
+            document.getElementById('yes-label').textContent = t['yes-label'];
+            document.getElementById('no-label').textContent = t['no-label'];
+            document.getElementById('reaction-header').textContent = t['reaction-header'];
+            document.getElementById('reaction').placeholder = t['reaction-placeholder'];
+            document.getElementById('detection-header').textContent = t['detection-header'];
+            document.getElementById('detection').placeholder = t['detection-placeholder'];
+            document.getElementById('solution-header').textContent = t['solution-header'];
+            document.getElementById('solution').placeholder = t['solution-placeholder'];
+            
+            // Факторы
+            document.getElementById('factors-title').textContent = t['factors-title'];
+            document.getElementById('physical-factors-title').textContent = t['physical-factors-title'];
+            document.getElementById('noise-label').textContent = t['noise-label'];
+            document.getElementById('vibration-label').textContent = t['vibration-label'];
+            document.getElementById('radiation-label').textContent = t['radiation-label'];
+            document.getElementById('temperature-label').textContent = t['temperature-label'];
+            document.getElementById('lighting-label').textContent = t['lighting-label'];
+            document.getElementById('extreme_weather-label').textContent = t['extreme_weather-label'];
+            document.getElementById('height-label').textContent = t['height-label'];
+            document.getElementById('falling_objects-label').textContent = t['falling_objects-label'];
+            document.getElementById('slipping-label').textContent = t['slipping-label'];
+            document.getElementById('heavy_equipment-label').textContent = t['heavy_equipment-label'];
+            document.getElementById('driving-label').textContent = t['driving-label'];
+            document.getElementById('hand_tools-label').textContent = t['hand_tools-label'];
+            document.getElementById('high_pressure-label').textContent = t['high_pressure-label'];
+            document.getElementById('rotating-label').textContent = t['rotating-label'];
+            document.getElementById('flying_particles-label').textContent = t['flying_particles-label'];
+            document.getElementById('electrical-label').textContent = t['electrical-label'];
+            document.getElementById('lifting_operations-label').textContent = t['lifting_operations-label'];
+            
+            document.getElementById('chemical-bio-title').textContent = t['chemical-bio-title'];
+            document.getElementById('chemical-label').textContent = t['chemical-label'];
+            document.getElementById('biological-label').textContent = t['biological-label'];
+            
+            document.getElementById('psycho-factors-title').textContent = t['psycho-factors-title'];
+            document.getElementById('psychological-label').textContent = t['psychological-label'];
+            document.getElementById('ergonomics-label').textContent = t['ergonomics-label'];
+            document.getElementById('psychoactive-label').textContent = t['psychoactive-label'];
+            document.getElementById('manual_lifting-label').textContent = t['manual_lifting-label'];
+            document.getElementById('vulnerable_workers-label').textContent = t['vulnerable_workers-label'];
+            
+            document.getElementById('organizational-factors-title').textContent = t['organizational-factors-title'];
+            document.getElementById('confined_space-label').textContent = t['confined_space-label'];
+            document.getElementById('hot_work-label').textContent = t['hot_work-label'];
+            document.getElementById('earth_works-label').textContent = t['earth_works-label'];
+            document.getElementById('lockout-label').textContent = t['lockout-label'];
+            document.getElementById('fire_safety-label').textContent = t['fire_safety-label'];
+            
+            // Предупреждение
+            document.getElementById('warning-text').textContent = t['warning-text'];
+            
+            // Подтверждение
+            document.getElementById('confirmation-title').textContent = t['confirmation-title'];
+            document.getElementById('confirmation-text').textContent = t['confirmation-text'];
+            document.getElementById('confirmation-code-label').innerHTML = '<strong>' + t['confirmation-code-label'] + '</strong>';
+            document.getElementById('confirmation-note').innerHTML = t['confirmation-note'];
+            document.getElementById('print-btn').textContent = t['print-btn'];
+            document.getElementById('new-card-btn').textContent = t['new-card-btn'];
+            
+            // Инструкция
+            document.getElementById('instruction-title').textContent = t['instruction-title'];
+            document.getElementById('step1-title').textContent = t['step1-title'];
+            document.getElementById('step1-text').textContent = t['step1-text'];
+            document.getElementById('step2-title').textContent = t['step2-title'];
+            document.getElementById('step2-text').textContent = t['step2-text'];
+            document.getElementById('step3-title').textContent = t['step3-title'];
+            document.getElementById('step3-text').textContent = t['step3-text'];
+            document.getElementById('step4-title').textContent = t['step4-title'];
+            document.getElementById('step4-text').textContent = t['step4-text'];
+            document.getElementById('questions-text').textContent = t['questions-text'];
+            
+            // Кнопки
+            document.getElementById('send-btn').textContent = t['send-btn'];
+            document.getElementById('clear-btn').textContent = t['clear-btn'];
+            
+            // Сообщения (обновляем только текст, если они отображаются)
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            if (successMsg.style.display === 'block') {
+                successMsg.textContent = t['success-message'];
+            }
+            if (errorMsg.style.display === 'block') {
+                errorMsg.textContent = t['error-message'];
+            }
+            
+            // Обновляем опции выпадающего списка
+            const select = document.getElementById('observation-type');
+            const selectedValue = select.value;
+            select.innerHTML = '';
+            
+            Object.keys(t['observation-types']).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = t['observation-types'][key];
+                select.appendChild(option);
+            });
+            
+            // Восстанавливаем выбранное значение
+            select.value = selectedValue;
+            
+            // Сохраняем выбранный язык в localStorage
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Функция для получения выбранных факторов
+        function getSelectedFactors() {
+            const selectedFactors = [];
+            document.querySelectorAll('.factor-checkbox:checked').forEach(checkbox => {
+                selectedFactors.push(checkbox.parentElement.querySelector('label').textContent.trim());
+            });
+            return selectedFactors;
+        }
+
+        // Функция сохранения в Firebase и получения кода
+        async function saveObservationToFirebase(observation) {
+            try {
+                console.log('Сохранение в Firebase...', observation);
+                
+                // Добавляем метаданные
+                observation.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                observation.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                observation.status = 'open';  // По умолчанию "Открыто"
+                observation.language = currentLanguage; // Сохраняем язык
+                
+                // Сохраняем в Firestore и получаем ID документа
+                const docRef = await db.collection('observations').add(observation);
+                
+                console.log('✅ Данные успешно сохранены в Firebase. ID:', docRef.id);
+                
+                // Генерируем читаемый код из ID документа
+                const readableCode = generateReadableCode(docRef.id);
+                
+                // Обновляем документ с кодом
+                await docRef.update({
+                    confirmationCode: readableCode,
+                    documentId: docRef.id,
+                    language: currentLanguage
+                });
+                
+                return { 
+                    success: true, 
+                    id: docRef.id,
+                    confirmationCode: readableCode,
+                    docRef: docRef 
+                };
+                
+            } catch (error) {
+                console.error('❌ Ошибка сохранения в Firebase:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Функция генерации читаемого кода из ID документа
+        function generateReadableCode(documentId) {
+            // Берем первые 8 символов ID и преобразуем в верхний регистр
+            let code = documentId.substring(0, 8).toUpperCase();
+            
+            // Добавляем тире для читаемости: ABC1-D23E
+            if (code.length >= 8) {
+                code = code.substring(0, 4) + '-' + code.substring(4);
+            }
+            
+            return code;
+        }
+
+        // Функция сохранения в localStorage
+        function saveObservationToLocalStorage(observation, firebaseData) {
+            const observationWithId = {
+                ...observation,
+                id: firebaseData.id || 'local_' + Date.now(),
+                confirmationCode: firebaseData.confirmationCode || 'LOCAL-' + Date.now().toString(36).toUpperCase(),
+                savedAt: new Date().toISOString(),
+                synced: !!firebaseData.id,
+                language: currentLanguage
+            };
+            
+            const existingData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            existingData.push(observationWithId);
+            localStorage.setItem('hseObservations', JSON.stringify(existingData));
+            
+            return observationWithId;
+        }
+
+        // Функция показа подтверждения с кодом
+        function showConfirmation(code) {
+            const confirmationMessage = document.getElementById('confirmation-message');
+            const confirmationCode = document.getElementById('confirmation-code');
+            const displayCode = document.getElementById('display-code');
+            
+            // Сохраняем код в глобальной переменной
+            lastGeneratedCode = code;
+            
+            // Обновляем отображение кода
+            confirmationCode.textContent = code;
+            displayCode.textContent = code;
+            
+            // Показываем сообщение подтверждения
+            confirmationMessage.style.display = 'block';
+            
+            // Скрываем обычные сообщения
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            
+            // Прокручиваем к подтверждению
+            confirmationMessage.scrollIntoView({ behavior: 'smooth' });
+            
+            // Показываем уведомление на текущем языке
+            const t = translations[currentLanguage];
+            alert(`🎉 ${t['success-message']}\n\n${t['confirmation-code-label']} ${code}\n\n${t['confirmation-note'].replace(/<br>/g, '\n')}`);
+        }
+
+        // Функция для печати подтверждения
+        function printConfirmation() {
+            const t = translations[currentLanguage];
+            const printContent = `
+                <html>
+                <head>
+                    <title>${t['confirmation-title'].replace('🎉 ', '')}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .code { 
+                            font-size: 32px; 
+                            font-weight: bold; 
+                            text-align: center; 
+                            margin: 20px 0;
+                            padding: 15px;
+                            border: 2px dashed #000;
+                            background: #f0f0f0;
+                        }
+                        .details { margin: 20px 0; }
+                        .footer { 
+                            margin-top: 40px; 
+                            font-size: 12px; 
+                            color: #666;
+                            text-align: center;
+                        }
+                        .language { 
+                            position: absolute; 
+                            top: 20px; 
+                            right: 20px; 
+                            font-size: 12px; 
+                            color: #666;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="language">${currentLanguage.toUpperCase()}</div>
+                    
+                    <div class="header">
+                        <h1>iSafe - ${t['confirmation-title'].replace('🎉 ', '')}</h1>
+                        <p>${t['confirmation-text']}</p>
+                    </div>
+                    
+                    <div class="details">
+                        <p><strong>${t['datetime-label']}:</strong> ${new Date().toLocaleDateString(currentLanguage === 'en' ? 'en-US' : (currentLanguage === 'kz' ? 'kk-KZ' : 'ru-RU'), {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</p>
+                        <p><strong>${t['observer-name-label']}:</strong> ${document.getElementById('observer-name').value}</p>
+                        <p><strong>${t['area-label']}:</strong> ${document.getElementById('area').value}</p>
+                    </div>
+                    
+                    <div class="code">
+                        ${t['confirmation-code-label']}: ${lastGeneratedCode}
+                    </div>
+                    
+                    <div class="details">
+                        <p><strong>${t['confirmation-note'].replace(/<br>/g, ' ')}</strong></p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>iSafe Observation System • ${new Date().getFullYear()}</p>
+                        <p>${currentLanguage === 'en' ? 'This document is generated automatically' : 
+                           currentLanguage === 'kz' ? 'Бұл құжат автоматты түрде жасалған' : 
+                           'Этот документ сгенерирован автоматически'}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Функция для отправки новой карточки
+        function sendNewObservation() {
+            // Скрываем подтверждение
+            document.getElementById('confirmation-message').style.display = 'none';
+            
+            // Очищаем форму
+            resetForm();
+            
+            // Прокручиваем к началу формы
+            document.getElementById('observation-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Функция валидации формы
+        function validateForm() {
+            const t = translations[currentLanguage];
+            const requiredFields = [
+                'observer-name',
+                'datetime',
+                'observer-company',
+                'observation-company',
+                'area',
+                'reaction',
+                'detection',
+                'solution'
+            ];
+            
+            for (const fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    const fieldName = field.previousElementSibling?.textContent || 
+                                    field.parentElement.previousElementSibling?.textContent ||
+                                    field.parentElement.parentElement.previousElementSibling?.textContent ||
+                                    'Поле';
+                    showMessage(t['validation-messages']['required-field'] + fieldName, false);
+                    field.focus();
+                    return false;
+                }
+            }
+            
+            if (document.getElementById('observation-type').value === '') {
+                showMessage(t['validation-messages']['select-type'], false);
+                document.getElementById('observation-type').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Функция показа сообщения (для ошибок)
+        function showMessage(message, isSuccess = true) {
+            const t = translations[currentLanguage];
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Скрываем подтверждение
+            document.getElementById('confirmation-message').style.display = 'none';
+            
+            if (isSuccess) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            } else {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+            
+            // Прокручиваем к сообщению
+            (isSuccess ? successMessage : errorMessage).scrollIntoView({ behavior: 'smooth' });
+            
+            // Скрываем сообщение через 5 секунд
+            setTimeout(function() {
+                if (isSuccess) {
+                    successMessage.style.display = 'none';
+                } else {
+                    errorMessage.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        // Функция сброса формы
+        function resetForm() {
+            document.getElementById('observer-name').value = '';
+            document.getElementById('observer-company').value = '';
+            document.getElementById('observation-company').value = '';
+            document.getElementById('area').value = '';
+            document.getElementById('observation-type').selectedIndex = 0;
+            document.getElementById('stop-no').checked = true;
+            document.getElementById('reaction').value = '';
+            document.getElementById('detection').value = '';
+            document.getElementById('solution').value = '';
+            
+            // Сброс чекбоксов факторов
+            document.querySelectorAll('.factor-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Установка текущей даты и времени
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = formattedNow;
+            
+            // Скрываем все сообщения
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('confirmation-message').style.display = 'none';
+        }
+
+        // Функция синхронизации локальных данных
+        async function syncLocalData() {
+            const localData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            const unsyncedData = localData.filter(item => !item.synced && !item.id.startsWith('local_'));
+            
+            if (unsyncedData.length > 0) {
+                console.log(`Обнаружено ${unsyncedData.length} несинхронизированных записей`);
+                
+                for (const data of unsyncedData) {
+                    try {
+                        // Удаляем временные поля
+                        const { id, savedAt, synced, confirmationCode, ...cleanData } = data;
+                        
+                        const result = await saveObservationToFirebase(cleanData);
+                        if (result.success) {
+                            // Помечаем как синхронизированную
+                            const index = localData.findIndex(item => item.id === id);
+                            if (index > -1) {
+                                localData[index].synced = true;
+                                localData[index].firebaseId = result.id;
+                                localData[index].confirmationCode = result.confirmationCode;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Ошибка синхронизации:', error);
+                    }
+                }
+                
+                // Обновляем localStorage
+                localStorage.setItem('hseObservations', JSON.stringify(localData));
+            }
+        }
+
+        // Функция проверки соединения
+        function checkConnection() {
+            return navigator.onLine && typeof db !== 'undefined';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Firebase инициализирован:', firebase.apps.length > 0);
+            console.log('Firestore доступен:', !!db);
+            
+            // Восстанавливаем сохраненный язык
+            const savedLanguage = localStorage.getItem('preferredLanguage') || 'ru';
+            changeLanguage(savedLanguage);
+            
+            // Установка текущей даты и времени по умолчанию
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = formattedNow;
+            
+            // Проверка сети и синхронизация
+            if (navigator.onLine) {
+                syncLocalData();
+            }
+            
+            // Слушатели событий сети
+            window.addEventListener('online', () => {
+                console.log('✅ Онлайн - запускаю синхронизацию');
+                const t = translations[currentLanguage];
+                showMessage(t['validation-messages']['connection-restored'], true);
+                syncLocalData();
+            });
+            
+            window.addEventListener('offline', () => {
+                console.log('⚠️ Офлайн - данные будут сохранены локально');
+                const t = translations[currentLanguage];
+                showMessage(t['validation-messages']['connection-lost'], false);
+            });
+            
+            // Обработка отправки формы
+            document.getElementById('send-btn').addEventListener('click', async function() {
+                if (!validateForm()) return;
+                
+                // Создаем объект наблюдения
+                const observation = {
+                    name: document.getElementById('observer-name').value,
+                    observationDateTime: document.getElementById('datetime').value,
+                    companyObserver: document.getElementById('observer-company').value,
+                    companyObserved: document.getElementById('observation-company').value,
+                    area: document.getElementById('area').value,
+                    areaText: document.getElementById('area').value,
+                    typeObservation: document.getElementById('observation-type').value,
+                    typeObservationText: document.getElementById('observation-type').options[document.getElementById('observation-type').selectedIndex].text,
+                    swa: document.querySelector('input[name="work-stopped"]:checked').value,
+                    reaction: document.getElementById('reaction').value,
+                    detection: document.getElementById('detection').value,
+                    solution: document.getElementById('solution').value,
+                    typeHazard: getSelectedFactors(),
+                    language: currentLanguage,
+                    source: 'web-form',
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        online: navigator.onLine
+                    }
+                };
+                
+                // Показываем индикатор загрузки
+                const t = translations[currentLanguage];
+                const originalText = this.textContent;
+                this.textContent = currentLanguage === 'en' ? 'Sending...' : 
+                                 currentLanguage === 'kz' ? 'Жіберілуде...' : 
+                                 'Отправка...';
+                this.classList.add('loading');
+                this.disabled = true;
+                
+                try {
+                    // Проверяем соединение
+                    const isOnline = checkConnection();
+                    
+                    if (isOnline) {
+                        // Пытаемся сохранить в Firebase и получить код
+                        const result = await saveObservationToFirebase(observation);
+                        
+                        if (result.success) {
+                            // Сохраняем в localStorage с данными из Firebase
+                            saveObservationToLocalStorage(observation, result);
+                            
+                            // Показываем подтверждение с кодом
+                            showConfirmation(result.confirmationCode);
+                        } else {
+                            // Генерируем локальный код
+                            const localCode = 'LOCAL-' + Date.now().toString(36).toUpperCase().substring(0, 8);
+                            
+                            // Сохраняем только в localStorage
+                            saveObservationToLocalStorage(observation, { 
+                                id: null, 
+                                confirmationCode: localCode 
+                            });
+                            
+                            showConfirmation(localCode);
+                            showMessage(t['validation-messages']['firebase-error'], false);
+                        }
+                    } else {
+                        // Генерируем локальный код для офлайн-режима
+                        const offlineCode = 'OFFLINE-' + Date.now().toString(36).toUpperCase().substring(0, 8);
+                        
+                        // Сохраняем только в localStorage
+                        saveObservationToLocalStorage(observation, { 
+                            id: null, 
+                            confirmationCode: offlineCode 
+                        });
+                        
+                        showConfirmation(offlineCode);
+                        showMessage(t['validation-messages']['offline-save'], false);
+                    }
+                    
+                    // Очистка формы
+                    resetForm();
+                    
+                } catch (error) {
+                    console.error('Критическая ошибка:', error);
+                    
+                    // Генерируем аварийный код
+                    const emergencyCode = 'ERR-' + Date.now().toString(36).toUpperCase().substring(0, 6);
+                    
+                    // Сохраняем в localStorage как fallback
+                    saveObservationToLocalStorage(observation, { 
+                        id: null, 
+                        confirmationCode: emergencyCode 
+                    });
+                    
+                    showConfirmation(emergencyCode);
+                    showMessage(t['validation-messages']['firebase-error'], false);
+                    resetForm();
+                    
+                } finally {
+                    // Восстанавливаем кнопку
+                    this.textContent = originalText;
+                    this.classList.remove('loading');
+                    this.disabled = false;
+                }
+            });
+            
+            // Обработка очистки формы
+            document.getElementById('clear-btn').addEventListener('click', function() {
+                resetForm();
+            });
+            
+            // Проверяем наличие офлайн данных при загрузке
+            const localData = JSON.parse(localStorage.getItem('hseObservations') || '[]');
+            const offlineCount = localData.filter(item => !item.synced).length;
+            if (offlineCount > 0) {
+                console.log(`Найдено ${offlineCount} несинхронизированных записей`);
+            }
+        });
+    </script>
+</body>
+</html>
