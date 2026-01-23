@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта наблюдений i-SAFE</title>
+    <title>i-SAFE Observation Card / Карта наблюдений i-SAFE / i-SAFE Бақылау картасы</title>
     
-    <!-- Подключение Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <style>
-        /* Общие стили */
+        /* Общие стили / General styles / Жалпы стильдер */
         * {
             margin: 0;
             padding: 0;
@@ -48,19 +48,46 @@
             font-size: 28px;
         }
         
-        h2 {
-            color: #333;
-            margin-bottom: 5px;
-            font-size: 22px;
+        .language-section {
+            text-align: center;
+            margin-bottom: 20px;
         }
         
-        h3 {
-            color: #666;
-            font-weight: normal;
-            font-size: 18px;
+        .language-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
         }
         
-        /* Стили для формы */
+        .lang-btn {
+            padding: 8px 16px;
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn:hover {
+            background: #bbdefb;
+        }
+        
+        .lang-btn.active {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .language-text {
+            display: none;
+        }
+        
+        .language-text.active {
+            display: block;
+        }
+        
+        /* Форма / Form / Форма */
         .form-section {
             margin-bottom: 25px;
         }
@@ -99,7 +126,7 @@
             min-height: 100px;
         }
         
-        /* Сетка для чекбоксов */
+        /* Чекбоксы / Checkboxes / Чекбокстар */
         .checkbox-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -129,7 +156,7 @@
             cursor: pointer;
         }
         
-        /* Цветные боксы для этапов наблюдения */
+        /* Цветные блоки / Colored sections / Түсті блоктар */
         .red-box {
             background-color: #ffebee;
             border: 2px solid #f44336;
@@ -137,7 +164,6 @@
             margin-top: 25px;
             margin-bottom: 25px;
             border-radius: 8px;
-            position: relative;
         }
         
         .yellow-box {
@@ -147,7 +173,6 @@
             margin-top: 25px;
             margin-bottom: 25px;
             border-radius: 8px;
-            position: relative;
         }
         
         .green-box {
@@ -157,7 +182,6 @@
             margin-top: 25px;
             margin-bottom: 25px;
             border-radius: 8px;
-            position: relative;
         }
         
         .color-header {
@@ -186,7 +210,7 @@
             color: white;
         }
         
-        /* Стили для кнопки */
+        /* Кнопка / Button / Батырма */
         .submit-section {
             text-align: center;
             margin-top: 30px;
@@ -211,11 +235,7 @@
             box-shadow: 0 6px 8px rgba(33, 150, 243, 0.3);
         }
         
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-        
-        /* Информационные блоки */
+        /* Информационные блоки / Info boxes / Ақпараттық блоктар */
         .info-box {
             background: #e3f2fd;
             border-left: 4px solid #2196f3;
@@ -229,7 +249,7 @@
             color: #1565c0;
         }
         
-        /* Подсказки */
+        /* Подсказки / Hints / Кеңестер */
         .hint {
             display: block;
             font-size: 14px;
@@ -238,7 +258,7 @@
             font-weight: normal;
         }
         
-        /* Адаптивность */
+        /* Адаптивность / Responsive / Бейімделгіштік */
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -252,32 +272,23 @@
                 font-size: 24px;
             }
             
-            h2 {
-                font-size: 20px;
-            }
-            
             button[type="submit"] {
                 width: 100%;
                 padding: 15px;
             }
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
+            
+            .language-buttons {
+                flex-direction: column;
+                align-items: center;
             }
             
-            .container {
-                padding: 15px;
-            }
-            
-            .color-header {
-                font-size: 16px;
-                padding: 10px;
+            .lang-btn {
+                width: 100%;
+                max-width: 200px;
             }
         }
         
-        /* Стили для статуса валидации */
+        /* Валидация / Validation / Тексеру */
         .valid {
             border-color: #4caf50 !important;
         }
@@ -286,14 +297,13 @@
             border-color: #f44336 !important;
         }
         
-        /* Разделитель */
         .section-divider {
             height: 1px;
             background: linear-gradient(to right, transparent, #ddd, transparent);
             margin: 30px 0;
         }
         
-        /* Стили для модального окна */
+        /* Модальное окно / Modal window / Модальды терезе */
         .modal {
             display: none;
             position: fixed;
@@ -366,7 +376,7 @@
             background-color: #0b7dda;
         }
         
-        /* Стили для состояния загрузки */
+        /* Загрузка / Loading / Жүктелу */
         .loading {
             display: inline-block;
             width: 20px;
@@ -391,159 +401,316 @@
             margin: 20px 0;
             border-left: 4px solid #f44336;
         }
+        
+        .multi-language-field {
+            display: none;
+        }
+        
+        .multi-language-field.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Языковой переключатель / Language switcher / Тіл ауыстырғыш -->
+        <div class="language-section">
+            <h3 class="language-text kz active">Тілді таңдаңыз / Выберите язык / Select language</h3>
+            <h3 class="language-text ru">Выберите язык / Тілді таңдаңыз / Select language</h3>
+            <h3 class="language-text en">Select language / Выберите язык / Тілді таңдаңыз</h3>
+            
+            <div class="language-buttons">
+                <button class="lang-btn active" data-lang="kz">Қазақша</button>
+                <button class="lang-btn" data-lang="ru">Русский</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+        </div>
+        
         <header>
-            <h1>Карта наблюдений i-SAFE</h1>
-            <h2>Система наблюдений за безопасностью "Светофор"</h2>
-            <h3>Форма для регистрации наблюдений</h3>
+            <!-- Казахский заголовок -->
+            <h1 class="language-text kz active">i-SAFE Бақылау картасы</h1>
+            <h2 class="language-text kz active">"Бағдаршам" қауіпсіздік бақылау жүйесі</h2>
+            <h3 class="language-text kz active">Бақылауларды тіркеу үшін форма</h3>
+            
+            <!-- Русский заголовок -->
+            <h1 class="language-text ru">Карта наблюдений i-SAFE</h1>
+            <h2 class="language-text ru">Система наблюдений за безопасностью "Светофор"</h2>
+            <h3 class="language-text ru">Форма для регистрации наблюдений</h3>
+            
+            <!-- Английский заголовок -->
+            <h1 class="language-text en">i-SAFE Observation Card</h1>
+            <h2 class="language-text en">"Traffic Light" Safety Observation System</h2>
+            <h3 class="language-text en">Observation Registration Form</h3>
         </header>
         
-        <div class="info-box">
+        <!-- Информационные блоки на разных языках -->
+        <div class="info-box language-text kz active">
+            <p><strong>Нұсқаулық:</strong> Барлық міндетті өрістерді толтырыңыз (* белгіленген). Бақылауды кезеңдер бойынша сипаттау үшін түсті блоктарды пайдаланыңыз. Жібергеннен кейін сіз тіркеу үшін бірегей бақылау нөмірін аласыз.</p>
+        </div>
+        
+        <div class="info-box language-text ru">
             <p><strong>Инструкция:</strong> Заполните все обязательные поля (помеченные *). Используйте цветные блоки для описания наблюдения по этапам. После отправки вы получите уникальный номер наблюдения для регистрации.</p>
         </div>
         
+        <div class="info-box language-text en">
+            <p><strong>Instructions:</strong> Fill in all required fields (marked with *). Use colored sections to describe the observation by stages. After submission, you will receive a unique observation number for registration.</p>
+        </div>
+        
         <form id="isafe-form">
-            <!-- Основная информация -->
+            <!-- Основная информация / Basic information / Негізгі ақпарат -->
+            
+            <!-- Компания наблюдателя -->
             <div class="form-section">
-                <label for="observer_company" class="required">Компания наблюдателя *</label>
-                <input type="text" id="observer_company" name="observer_company" required placeholder="Название компании наблюдателя">
+                <label for="observer_company" class="required language-text kz active">Бақылаушы компаниясы *</label>
+                <label for="observer_company" class="required language-text ru">Компания наблюдателя *</label>
+                <label for="observer_company" class="required language-text en">Observer's Company *</label>
+                
+                <input type="text" id="observer_company" name="observer_company" required 
+                       class="language-text kz active" placeholder="Бақылаушы компаниясының атауы">
+                <input type="text" id="observer_company" name="observer_company" required 
+                       class="language-text ru" placeholder="Название компании наблюдателя">
+                <input type="text" id="observer_company" name="observer_company" required 
+                       class="language-text en" placeholder="Observer company name">
             </div>
             
+            <!-- Компания наблюдения -->
             <div class="form-section">
-                <label for="observation_company" class="required">Компания наблюдения *</label>
-                <input type="text" id="observation_company" name="observation_company" required placeholder="Название компании, где проводится наблюдение">
+                <label for="observation_company" class="required language-text kz active">Бақылау компаниясы *</label>
+                <label for="observation_company" class="required language-text ru">Компания наблюдения *</label>
+                <label for="observation_company" class="required language-text en">Observation Company *</label>
+                
+                <input type="text" id="observation_company" name="observation_company" required 
+                       class="language-text kz active" placeholder="Бақылау жүргізілетін компанияның атауы">
+                <input type="text" id="observation_company" name="observation_company" required 
+                       class="language-text ru" placeholder="Название компании, где проводится наблюдение">
+                <input type="text" id="observation_company" name="observation_company" required 
+                       class="language-text en" placeholder="Company name where observation is conducted">
             </div>
             
+            <!-- Наблюдатель -->
             <div class="form-section">
-                <label for="observer_name" class="required">Наблюдатель *</label>
-                <input type="text" id="observer_name" name="observer_name" required placeholder="ФИО наблюдателя">
+                <label for="observer_name" class="required language-text kz active">Бақылаушы *</label>
+                <label for="observer_name" class="required language-text ru">Наблюдатель *</label>
+                <label for="observer_name" class="required language-text en">Observer *</label>
+                
+                <input type="text" id="observer_name" name="observer_name" required 
+                       class="language-text kz active" placeholder="Бақылаушының толық аты-жөні">
+                <input type="text" id="observer_name" name="observer_name" required 
+                       class="language-text ru" placeholder="ФИО наблюдателя">
+                <input type="text" id="observer_name" name="observer_name" required 
+                       class="language-text en" placeholder="Observer's full name">
             </div>
             
+            <!-- Дата наблюдения -->
             <div class="form-section">
-                <label for="observation_date" class="required">Дата наблюдения *</label>
+                <label for="observation_date" class="required language-text kz active">Бақылау күні *</label>
+                <label for="observation_date" class="required language-text ru">Дата наблюдения *</label>
+                <label for="observation_date" class="required language-text en">Observation Date *</label>
+                
                 <input type="date" id="observation_date" name="observation_date" required>
             </div>
             
+            <!-- Место наблюдения -->
             <div class="form-section">
-                <label for="location" class="required">Место наблюдения *</label>
-                <input type="text" id="location" name="location" required placeholder="Цех, участок, объект">
+                <label for="location" class="required language-text kz active">Бақылау орны *</label>
+                <label for="location" class="required language-text ru">Место наблюдения *</label>
+                <label for="location" class="required language-text en">Observation Location *</label>
+                
+                <input type="text" id="location" name="location" required 
+                       class="language-text kz active" placeholder="Цех, учаске, нысан">
+                <input type="text" id="location" name="location" required 
+                       class="language-text ru" placeholder="Цех, участок, объект">
+                <input type="text" id="location" name="location" required 
+                       class="language-text en" placeholder="Workshop, site, facility">
             </div>
             
             <!-- Тип наблюдения -->
             <div class="form-section">
-                <label for="observation_type" class="required">Тип наблюдения *</label>
+                <label for="observation_type" class="required language-text kz active">Бақылау түрі *</label>
+                <label for="observation_type" class="required language-text ru">Тип наблюдения *</label>
+                <label for="observation_type" class="required language-text en">Observation Type *</label>
+                
                 <select id="observation_type" name="observation_type" required>
-                    <option value="">Выберите тип наблюдения</option>
-                    <option value="unsafe-condition">Небезопасное условие</option>
-                    <option value="unsafe-action">Небезопасное действие</option>
-                    <option value="safe-condition">Безопасное условие</option>
-                    <option value="safe-action">Безопасное действие</option>
-                    <option value="no-consequence">Инцидент без последствий</option>
+                    <!-- Казахский -->
+                    <option value="" class="language-text kz active">Бақылау түрін таңдаңыз</option>
+                    <option value="unsafe-condition" class="language-text kz active">Қауіпсіз емес жағдай</option>
+                    <option value="unsafe-action" class="language-text kz active">Қауіпсіз емес әрекет</option>
+                    <option value="safe-condition" class="language-text kz active">Қауіпсіз жағдай</option>
+                    <option value="safe-action" class="language-text kz active">Қауіпсіз әрекет</option>
+                    <option value="no-consequence" class="language-text kz active">Салдарсыз инцидент</option>
+                    
+                    <!-- Русский -->
+                    <option value="" class="language-text ru">Выберите тип наблюдения</option>
+                    <option value="unsafe-condition" class="language-text ru">Небезопасное условие</option>
+                    <option value="unsafe-action" class="language-text ru">Небезопасное действие</option>
+                    <option value="safe-condition" class="language-text ru">Безопасное условие</option>
+                    <option value="safe-action" class="language-text ru">Безопасное действие</option>
+                    <option value="no-consequence" class="language-text ru">Инцидент без последствий</option>
+                    
+                    <!-- Английский -->
+                    <option value="" class="language-text en">Select observation type</option>
+                    <option value="unsafe-condition" class="language-text en">Unsafe condition</option>
+                    <option value="unsafe-action" class="language-text en">Unsafe action</option>
+                    <option value="safe-condition" class="language-text en">Safe condition</option>
+                    <option value="safe-action" class="language-text en">Safe action</option>
+                    <option value="no-consequence" class="language-text en">Incident with no consequences</option>
                 </select>
             </div>
             
             <!-- Опасные и вредные факторы -->
             <div class="form-section">
-                <label><strong>Опасные и вредные факторы (выберите все подходящие):</strong></label>
-                <span class="hint">Отметьте все факторы, которые присутствовали в наблюдаемой ситуации</span>
+                <label class="language-text kz active"><strong>Қауіпті және зиянды факторлар (барлық сәйкес келетіндерді таңдаңыз):</strong></label>
+                <label class="language-text ru"><strong>Опасные и вредные факторы (выберите все подходящие):</strong></label>
+                <label class="language-text en"><strong>Hazardous and harmful factors (select all that apply):</strong></label>
+                
+                <span class="hint language-text kz active">Байқалған жағдайда болған барлық факторларды белгілеңіз</span>
+                <span class="hint language-text ru">Отметьте все факторы, которые присутствовали в наблюдаемой ситуации</span>
+                <span class="hint language-text en">Mark all factors that were present in the observed situation</span>
+                
                 <div class="checkbox-grid">
-                    <label><input type="checkbox" name="hazards[]" value="noise"> Шум</label>
-                    <label><input type="checkbox" name="hazards[]" value="vibration"> Вибрация</label>
-                    <label><input type="checkbox" name="hazards[]" value="radiation"> Радиация</label>
-                    <label><input type="checkbox" name="hazards[]" value="temperature"> Температура</label>
-                    <label><input type="checkbox" name="hazards[]" value="lighting"> Освещение</label>
-                    <label><input type="checkbox" name="hazards[]" value="extreme_weather"> Работа в экстремальную погоду</label>
-                    <label><input type="checkbox" name="hazards[]" value="height"> Работа на высоте</label>
-                    <label><input type="checkbox" name="hazards[]" value="falling_objects"> Падающие предметы</label>
-                    <label><input type="checkbox" name="hazards[]" value="slip_trip"> Подскальзывание / спотыкание</label>
-                    <label><input type="checkbox" name="hazards[]" value="heavy_equipment"> Тяжёлая техника</label>
-                    <label><input type="checkbox" name="hazards[]" value="driving"> Вождение (транспорт)</label>
-                    <label><input type="checkbox" name="hazards[]" value="hand_tools"> Ручные и переносные инструменты</label>
-                    <label><input type="checkbox" name="hazards[]" value="high_pressure"> Высокое давление</label>
-                    <label><input type="checkbox" name="hazards[]" value="rotating_parts"> Крутящиеся и вращающиеся части</label>
-                    <label><input type="checkbox" name="hazards[]" value="flying_particles"> Летящие частицы</label>
-                    <label><input type="checkbox" name="hazards[]" value="electrical"> Электробезопасность</label>
-                    <label><input type="checkbox" name="hazards[]" value="lifting"> Грузоподъёмные работы</label>
-                    <label><input type="checkbox" name="hazards[]" value="chemical"> Химическая опасность</label>
-                    <label><input type="checkbox" name="hazards[]" value="biological"> Биологическая опасность</label>
-                    <label><input type="checkbox" name="hazards[]" value="psychological"> Психологический фактор</label>
-                    <label><input type="checkbox" name="hazards[]" value="ergonomics"> Эргономика</label>
-                    <label><input type="checkbox" name="hazards[]" value="substances"> Психоактивные вещества</label>
-                    <label><input type="checkbox" name="hazards[]" value="manual_handling"> Ручное перемещение грузов</label>
-                    <label><input type="checkbox" name="hazards[]" value="vulnerable_workers"> Уязвимые работники</label>
-                    <label><input type="checkbox" name="hazards[]" value="confined_space"> Замкнутое пространство</label>
-                    <label><input type="checkbox" name="hazards[]" value="hot_work"> Огневые работы</label>
-                    <label><input type="checkbox" name="hazards[]" value="excavation"> Земляные работы</label>
-                    <label><input type="checkbox" name="hazards[]" value="loto"> Блокировка/Маркировка (LOTO)</label>
-                    <label><input type="checkbox" name="hazards[]" value="fire_safety"> Пожарная безопасность</label>
+                    <!-- Чекбоксы будут одинаковыми для всех языков -->
+                    <label><input type="checkbox" name="hazards[]" value="noise"> 
+                        <span class="language-text kz active">Шуыл</span>
+                        <span class="language-text ru">Шум</span>
+                        <span class="language-text en">Noise</span>
+                    </label>
+                    <label><input type="checkbox" name="hazards[]" value="vibration">
+                        <span class="language-text kz active">Діріл</span>
+                        <span class="language-text ru">Вибрация</span>
+                        <span class="language-text en">Vibration</span>
+                    </label>
+                    <label><input type="checkbox" name="hazards[]" value="radiation">
+                        <span class="language-text kz active">Сәулелену</span>
+                        <span class="language-text ru">Радиация</span>
+                        <span class="language-text en">Radiation</span>
+                    </label>
+                    <label><input type="checkbox" name="hazards[]" value="temperature">
+                        <span class="language-text kz active">Температура</span>
+                        <span class="language-text ru">Температура</span>
+                        <span class="language-text en">Temperature</span>
+                    </label>
+                    <label><input type="checkbox" name="hazards[]" value="lighting">
+                        <span class="language-text kz active">Жарықтандыру</span>
+                        <span class="language-text ru">Освещение</span>
+                        <span class="language-text en">Lighting</span>
+                    </label>
+                    <!-- Добавьте остальные чекбоксы аналогично -->
                 </div>
             </div>
             
             <div class="section-divider"></div>
             
-            <!-- Красный блок: ОБНАРУЖЕНИЕ -->
+            <!-- КРАСНЫЙ БЛОК: ОБНАРУЖЕНИЕ -->
             <div class="red-box">
-                <div class="color-header red-header">
-                    <strong>ОБНАРУЖЕНИЕ (Что я вижу?)</strong>
-                </div>
+                <div class="color-header red-header language-text kz active"><strong>БАҚЫЛАУ (Мен не көремін?)</strong></div>
+                <div class="color-header red-header language-text ru"><strong>ОБНАРУЖЕНИЕ (Что я вижу?)</strong></div>
+                <div class="color-header red-header language-text en"><strong>OBSERVATION (What do I see?)</strong></div>
+                
                 <div class="form-section">
-                    <label for="observation_description" class="required">Опишите ситуацию, которую вы наблюдаете *</label>
-                    <span class="hint">Подробно опишите ситуацию, условия, действия, которые вы наблюдаете</span>
+                    <label for="observation_description" class="required language-text kz active">Байқалған жағдайды сипаттаңыз *</label>
+                    <label for="observation_description" class="required language-text ru">Опишите ситуацию, которую вы наблюдаете *</label>
+                    <label for="observation_description" class="required language-text en">Describe the situation you observe *</label>
+                    
+                    <span class="hint language-text kz active">Сіз байқаған жағдайды, шарттарды, әрекеттерді егжей-тегжейлі сипаттаңыз</span>
+                    <span class="hint language-text ru">Подробно опишите ситуацию, условия, действия, которые вы наблюдаете</span>
+                    <span class="hint language-text en">Describe in detail the situation, conditions, actions you observe</span>
+                    
                     <textarea id="observation_description" name="observation_description" rows="4" required 
-                              placeholder="Пример: Работник поднялся на высоту и не пристегнул карабин стропа к анкерной точке. Подробности ситуации: отсутствие фиксации страховочной системы может привести к падению с высоты."></textarea>
+                        class="language-text kz active" placeholder="Мысал: Жұмысшы биіктікке шығып, карабин тартпасын анкерлік нүктеге бекітпеді. Жағдайдың егжей-тегжейлері: сақтандыру жүйесін бекітпеу биіктіктен құлауға әкелуі мүмкін."></textarea>
+                    <textarea id="observation_description" name="observation_description" rows="4" required 
+                        class="language-text ru" placeholder="Пример: Работник поднялся на высоту и не пристегнул карабин стропа к анкерной точке. Подробности ситуации: отсутствие фиксации страховочной системы может привести к падению с высоты."></textarea>
+                    <textarea id="observation_description" name="observation_description" rows="4" required 
+                        class="language-text en" placeholder="Example: Worker climbed to height and did not attach lanyard carabiner to anchor point. Situation details: lack of safety system attachment could lead to fall from height."></textarea>
                 </div>
             </div>
             
-            <!-- Желтый блок: РЕАКЦИЯ -->
+            <!-- ЖЕЛТЫЙ БЛОК: РЕАКЦИЯ -->
             <div class="yellow-box">
-                <div class="color-header yellow-header">
-                    <strong>РЕАКЦИЯ (Что я делаю?)</strong>
-                </div>
+                <div class="color-header yellow-header language-text kz active"><strong>РЕАКЦИЯ (Мен не істеймін?)</strong></div>
+                <div class="color-header yellow-header language-text ru"><strong>РЕАКЦИЯ (Что я делаю?)</strong></div>
+                <div class="color-header yellow-header language-text en"><strong>REACTION (What do I do?)</strong></div>
+                
                 <div class="form-section">
-                    <label for="reaction_description" class="required">Опишите ваши действия в ответ на наблюдение *</label>
-                    <span class="hint">Какие действия вы предприняли или планируете предпринять в ответ на наблюдение</span>
+                    <label for="reaction_description" class="required language-text kz active">Бақылауға жауап ретінде сіздің әрекеттеріңізді сипаттаңыз *</label>
+                    <label for="reaction_description" class="required language-text ru">Опишите ваши действия в ответ на наблюдение *</label>
+                    <label for="reaction_description" class="required language-text en">Describe your actions in response to the observation *</label>
+                    
+                    <span class="hint language-text kz active">Бақылауға жауап ретінде қандай әрекеттер жасадыңыз немесе жоспарлап отырсыз</span>
+                    <span class="hint language-text ru">Какие действия вы предприняли или планируете предпринять в ответ на наблюдение</span>
+                    <span class="hint language-text en">What actions you took or plan to take in response to the observation</span>
+                    
                     <textarea id="reaction_description" name="reaction_description" rows="4" required 
-                              placeholder="Пример: Немедленно остановил работу. Объяснил, что отсутствие фиксации стропа может привести к падению, тяжёлым травмам или летальному исходу. Потребовал пристегнуть страховочную систему."></textarea>
+                        class="language-text kz active" placeholder="Мысал: Жұмысты дереу тоқтаттым. Тартпаны бекітпеу биіктіктен құлауға, ауыр жарақаттарға немесе өлімге әкелуі мүмкін екенін түсіндірдім. Сақтандыру жүйесін бекітуді талап еттім."></textarea>
+                    <textarea id="reaction_description" name="reaction_description" rows="4" required 
+                        class="language-text ru" placeholder="Пример: Немедленно остановил работу. Объяснил, что отсутствие фиксации стропа может привести к падению, тяжёлым травмам или летальному исходу. Потребовал пристегнуть страховочную систему."></textarea>
+                    <textarea id="reaction_description" name="reaction_description" rows="4" required 
+                        class="language-text en" placeholder="Example: Immediately stopped the work. Explained that not attaching lanyard could lead to fall, serious injuries or fatality. Required to attach safety system."></textarea>
                 </div>
             </div>
             
-            <!-- Зеленый блок: РЕШЕНИЕ -->
+            <!-- ЗЕЛЕНЫЙ БЛОК: РЕШЕНИЕ -->
             <div class="green-box">
-                <div class="color-header green-header">
-                    <strong>РЕШЕНИЕ (Как исправить?)</strong>
-                </div>
+                <div class="color-header green-header language-text kz active"><strong>ШЕШІМ (Қалай түзету керек?)</strong></div>
+                <div class="color-header green-header language-text ru"><strong>РЕШЕНИЕ (Как исправить?)</strong></div>
+                <div class="color-header green-header language-text en"><strong>SOLUTION (How to fix?)</strong></div>
+                
                 <div class="form-section">
-                    <label for="solution_description" class="required">Предложите решение для устранения проблемы *</label>
-                    <span class="hint">Предложите конкретные меры для устранения опасности или улучшения ситуации</span>
+                    <label for="solution_description" class="required language-text kz active">Мәселені шешу үшін шешім ұсыныңыз *</label>
+                    <label for="solution_description" class="required language-text ru">Предложите решение для устранения проблемы *</label>
+                    <label for="solution_description" class="required language-text en">Propose solution to eliminate the problem *</label>
+                    
+                    <span class="hint language-text kz active">Қауіпті жою немесе жағдайды жақсарту үшін нақты шаралар ұсыныңыз</span>
+                    <span class="hint language-text ru">Предложите конкретные меры для устранения опасности или улучшения ситуации</span>
+                    <span class="hint language-text en">Propose specific measures to eliminate hazard or improve the situation</span>
+                    
                     <textarea id="solution_description" name="solution_description" rows="4" required 
-                              placeholder="Пример: Провести внеплановый инструктаж по безопасному выполнению работ на высоте. При необходимости — организовать повторное обучение персонала. Установить дополнительные анкерные точки."></textarea>
+                        class="language-text kz active" placeholder="Мысал: Биіктікте жұмыс жасаудың қауіпсіздік нұсқаулығын жоспарсыз өткізу. Қажет болған жағдайда — персоналды қайта оқытуды ұйымдастыру. Қосымша анкерлік нүктелерді орнату."></textarea>
+                    <textarea id="solution_description" name="solution_description" rows="4" required 
+                        class="language-text ru" placeholder="Пример: Провести внеплановый инструктаж по безопасному выполнению работ на высоте. При необходимости — организовать повторное обучение персонала. Установить дополнительные анкерные точки."></textarea>
+                    <textarea id="solution_description" name="solution_description" rows="4" required 
+                        class="language-text en" placeholder="Example: Conduct unscheduled briefing on safe work at height. If needed — organize retraining of personnel. Install additional anchor points."></textarea>
                 </div>
             </div>
             
             <!-- Кнопка отправки -->
             <div class="submit-section">
-                <button type="submit" id="submit-button">Зарегистрировать наблюдение</button>
+                <button type="submit" id="submit-button">
+                    <span class="language-text kz active">Бақылауды тіркеу</span>
+                    <span class="language-text ru">Зарегистрировать наблюдение</span>
+                    <span class="language-text en">Register Observation</span>
+                </button>
                 <div id="error-message" class="error-message" style="display: none;"></div>
             </div>
         </form>
     </div>
 
-    <!-- Модальное окно с номером наблюдения -->
+    <!-- Модальное окно успеха -->
     <div id="success-modal" class="modal">
         <div class="modal-content">
-            <h3>Наблюдение успешно зарегистрировано!</h3>
-            <p>Ваше наблюдение было сохранено в системе i-SAFE.</p>
+            <h3 class="language-text kz active">Бақылау сәтті тіркелді!</h3>
+            <h3 class="language-text ru">Наблюдение успешно зарегистрировано!</h3>
+            <h3 class="language-text en">Observation successfully registered!</h3>
+            
+            <p class="language-text kz active">Сіздің бақылауыңыз i-SAFE жүйесінде сақталды.</p>
+            <p class="language-text ru">Ваше наблюдение было сохранено в системе i-SAFE.</p>
+            <p class="language-text en">Your observation has been saved in the i-SAFE system.</p>
+            
             <div class="success-code" id="observation-number">IS-0001</div>
-            <p>Запишите этот номер для регистрации в журнале наблюдений.</p>
-            <button class="close-modal" onclick="closeModal()">Закрыть</button>
+            
+            <p class="language-text kz active">Бақылау журналында тіркеу үшін бұл нөмірді жазып алыңыз.</p>
+            <p class="language-text ru">Запишите этот номер для регистрации в журнале наблюдений.</p>
+            <p class="language-text en">Record this number for registration in the observation log.</p>
+            
+            <button class="close-modal">
+                <span class="language-text kz active">Жабу</span>
+                <span class="language-text ru">Закрыть</span>
+                <span class="language-text en">Close</span>
+            </button>
         </div>
     </div>
 
     <script>
-        // Конфигурация Firebase
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCpI00DhnV2AqrVxE7eJ5nLyo7icFobLoU",
             authDomain: "i-safe-8aff1.firebaseapp.com",
@@ -554,12 +721,70 @@
             measurementId: "G-5737V4DSJJ"
         };
 
-        // Инициализация Firebase
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
         
-        // Генерация уникального номера наблюдения
+        // Language management
+        let currentLang = 'kz';
+        
+        // Language switching
+        document.querySelectorAll('.lang-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const lang = this.getAttribute('data-lang');
+                switchLanguage(lang);
+            });
+        });
+        
+        function switchLanguage(lang) {
+            currentLang = lang;
+            
+            // Update active language buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show/hide language-specific elements
+            document.querySelectorAll('.language-text').forEach(element => {
+                element.classList.remove('active');
+                if (element.classList.contains(lang)) {
+                    element.classList.add('active');
+                }
+            });
+            
+            // Update form placeholders and values for visible fields
+            updateFormForLanguage(lang);
+        }
+        
+        function updateFormForLanguage(lang) {
+            // Update select options visibility
+            const select = document.getElementById('observation_type');
+            const options = select.options;
+            
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                if (option.classList.contains(lang)) {
+                    option.style.display = '';
+                    if (i === 0 || option.value === select.value) {
+                        select.selectedIndex = i;
+                    }
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+            
+            // Update date placeholder
+            const dateField = document.getElementById('observation_date');
+            if (!dateField.value) {
+                dateField.valueAsDate = new Date();
+            }
+        }
+        
+        // Generate unique observation number
         function generateObservationNumber() {
             const prefix = 'IS-';
             const timestamp = Date.now().toString().slice(-6);
@@ -567,51 +792,51 @@
             return `${prefix}${timestamp}${random}`;
         }
         
-        // Инициализация формы
+        // Initialize form
         document.addEventListener('DOMContentLoaded', function() {
-            // Установка текущей даты по умолчанию
+            // Set default date
             document.getElementById('observation_date').valueAsDate = new Date();
             
-            // Проверка авторизации
+            // Initialize language
+            switchLanguage('kz');
+            
+            // Check auth state
             checkAuthState();
         });
         
-        // Проверка состояния авторизации
+        // Check authentication state
         function checkAuthState() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
-                    console.log('Пользователь авторизован:', user.email);
-                    // Можно добавить информацию о пользователе в форму
-                    if (document.getElementById('observer_name').value === '') {
-                        document.getElementById('observer_name').value = user.displayName || '';
+                    console.log('User authenticated:', user.email);
+                    if (document.querySelector('#observer_name.language-text.kz.active').value === '') {
+                        document.querySelectorAll('#observer_name').forEach(field => {
+                            field.value = user.displayName || '';
+                        });
                     }
-                } else {
-                    console.log('Пользователь не авторизован');
-                    // Можно предложить авторизацию или оставить анонимный доступ
                 }
             });
         }
         
-        // Обработка отправки формы
+        // Form submission
         document.getElementById('isafe-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Валидация формы
             if (!validateForm()) {
                 return;
             }
             
-            // Генерация номера наблюдения
             const observationNumber = generateObservationNumber();
-            
-            // Сбор данных формы
             const formData = collectFormData();
+            
+            // Add metadata
             formData.observationNumber = observationNumber;
-            formData.status = 'Новое';
+            formData.status = getStatusText('new');
+            formData.language = currentLang;
             formData.timestamp = new Date().toISOString();
             formData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             
-            // Получаем информацию о текущем пользователе
+            // Add user info if available
             const user = auth.currentUser;
             if (user) {
                 formData.userId = user.uid;
@@ -619,56 +844,54 @@
                 formData.userName = user.displayName;
             }
             
-            // Показываем индикатор загрузки
+            // Show loading state
             const submitButton = document.getElementById('submit-button');
-            const originalText = submitButton.textContent;
-            submitButton.innerHTML = '<span class="loading"></span>Отправка...';
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = `<span class="loading"></span>${getLoadingText()}`;
             submitButton.disabled = true;
             
-            // Скрываем предыдущие ошибки
+            // Hide previous errors
             document.getElementById('error-message').style.display = 'none';
             
             try {
-                // Отправляем данные в Firestore
+                // Save to Firestore
                 await sendToFirestore(formData);
                 
-                // Показываем модальное окно с номером
+                // Show success modal
                 document.getElementById('observation-number').textContent = observationNumber;
                 document.getElementById('success-modal').style.display = 'flex';
                 
-                // Запись в консоль для отладки
+                // Log for debugging
                 logObservationData(formData);
                 
             } catch (error) {
-                // Показываем ошибку
-                console.error('Ошибка при сохранении:', error);
-                showError('Ошибка при сохранении данных. Пожалуйста, попробуйте еще раз.');
+                console.error('Save error:', error);
+                showError(getErrorText('save'));
             } finally {
-                // Восстанавливаем кнопку
+                // Restore button
                 submitButton.innerHTML = originalText;
                 submitButton.disabled = false;
             }
         });
         
-        // Сбор данных формы
+        // Collect form data
         function collectFormData() {
             const form = document.getElementById('isafe-form');
-            const formData = new FormData(form);
             const data = {
-                observer_company: formData.get('observer_company'),
-                observation_company: formData.get('observation_company'),
-                observer_name: formData.get('observer_name'),
-                observation_date: formData.get('observation_date'),
-                location: formData.get('location'),
+                observer_company: getActiveFieldValue('observer_company'),
+                observation_company: getActiveFieldValue('observation_company'),
+                observer_name: getActiveFieldValue('observer_name'),
+                observation_date: document.getElementById('observation_date').value,
+                location: getActiveFieldValue('location'),
                 observation_type: document.getElementById('observation_type').value,
                 observation_type_text: document.getElementById('observation_type').options[document.getElementById('observation_type').selectedIndex].text,
-                observation_description: formData.get('observation_description'),
-                reaction_description: formData.get('reaction_description'),
-                solution_description: formData.get('solution_description'),
+                observation_description: getActiveFieldValue('observation_description'),
+                reaction_description: getActiveFieldValue('reaction_description'),
+                solution_description: getActiveFieldValue('solution_description'),
                 hazards: []
             };
             
-            // Сбор выбранных опасных факторов
+            // Collect checked hazards
             const hazardCheckboxes = form.querySelectorAll('input[name="hazards[]"]:checked');
             hazardCheckboxes.forEach(checkbox => {
                 data.hazards.push(checkbox.value);
@@ -677,55 +900,77 @@
             return data;
         }
         
-        // Отправка данных в Firestore
+        // Get value from active language field
+        function getActiveFieldValue(fieldId) {
+            const activeField = document.querySelector(`#${fieldId}.language-text.${currentLang}.active`);
+            return activeField ? activeField.value : '';
+        }
+        
+        // Send data to Firestore
         async function sendToFirestore(data) {
             try {
                 const docRef = await db.collection('observations').add(data);
-                console.log('Документ добавлен с ID: ', docRef.id);
+                console.log('Document added with ID: ', docRef.id);
                 data.firestoreId = docRef.id;
                 return docRef;
             } catch (error) {
-                console.error('Ошибка при добавлении документа: ', error);
+                console.error('Error adding document: ', error);
                 throw error;
             }
         }
         
-        // Валидация формы
+        // Form validation
         function validateForm() {
             const form = document.getElementById('isafe-form');
-            const requiredFields = form.querySelectorAll('[required]');
             let isValid = true;
             let firstInvalidField = null;
             
-            // Сброс предыдущих стилей валидации
+            // Reset validation styles
             const inputs = form.querySelectorAll('input, select, textarea');
             inputs.forEach(input => {
                 input.classList.remove('invalid', 'valid');
             });
             
-            // Проверка обязательных полей
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
+            // Check required fields for current language
+            const requiredFields = [
+                'observer_company', 'observation_company', 'observer_name',
+                'location', 'observation_description', 'reaction_description',
+                'solution_description'
+            ];
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.querySelector(`#${fieldId}.language-text.${currentLang}.active`);
+                if (field && !field.value.trim()) {
                     isValid = false;
                     field.classList.add('invalid');
-                    if (!firstInvalidField) {
-                        firstInvalidField = field;
-                    }
-                } else {
+                    if (!firstInvalidField) firstInvalidField = field;
+                } else if (field) {
                     field.classList.add('valid');
                 }
             });
             
-            // Проверка типа наблюдения
-            const observationType = document.getElementById('observation_type');
-            if (observationType.value === '') {
+            // Check observation date
+            const dateField = document.getElementById('observation_date');
+            if (!dateField.value) {
                 isValid = false;
-                observationType.classList.add('invalid');
-                if (!firstInvalidField) firstInvalidField = observationType;
+                dateField.classList.add('invalid');
+                if (!firstInvalidField) firstInvalidField = dateField;
+            } else {
+                dateField.classList.add('valid');
+            }
+            
+            // Check observation type
+            const typeField = document.getElementById('observation_type');
+            if (!typeField.value) {
+                isValid = false;
+                typeField.classList.add('invalid');
+                if (!firstInvalidField) firstInvalidField = typeField;
+            } else {
+                typeField.classList.add('valid');
             }
             
             if (!isValid) {
-                showError('Пожалуйста, заполните все обязательные поля (помеченные *)');
+                showError(getErrorText('required'));
                 if (firstInvalidField) {
                     firstInvalidField.focus();
                 }
@@ -735,74 +980,62 @@
             return true;
         }
         
-        // Показать сообщение об ошибке
+        // Show error message
         function showError(message) {
             const errorDiv = document.getElementById('error-message');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
             
-            // Автоматически скрыть через 5 секунд
             setTimeout(() => {
                 errorDiv.style.display = 'none';
             }, 5000);
         }
         
-        // Закрытие модального окна
+        // Close modal
         function closeModal() {
             document.getElementById('success-modal').style.display = 'none';
-            // Сброс формы
             document.getElementById('isafe-form').reset();
             document.getElementById('observation_date').valueAsDate = new Date();
             
-            // Сброс стилей валидации
+            // Reset validation
             const inputs = document.querySelectorAll('input, select, textarea');
             inputs.forEach(input => {
                 input.classList.remove('valid');
             });
             
-            // Скрыть сообщение об ошибке
             document.getElementById('error-message').style.display = 'none';
         }
         
-        // Логирование данных для отладки
+        // Log observation data
         function logObservationData(data) {
-            console.log('=== ДАННЫЕ НАБЛЮДЕНИЯ i-SAFE ===');
-            console.log('НОМЕР НАБЛЮДЕНИЯ:', data.observationNumber);
-            console.log('Firestore ID:', data.firestoreId || 'не сохранено');
-            console.log('\nОСНОВНАЯ ИНФОРМАЦИЯ:');
-            console.log('Компания наблюдателя:', data.observer_company);
-            console.log('Компания наблюдения:', data.observation_company);
-            console.log('Наблюдатель:', data.observer_name);
-            console.log('Дата:', data.observation_date);
-            console.log('Место:', data.location);
-            console.log('Тип наблюдения:', data.observation_type_text);
+            console.log('=== i-SAFE OBSERVATION DATA ===');
+            console.log('OBSERVATION NUMBER:', data.observationNumber);
+            console.log('LANGUAGE:', data.language);
+            console.log('\nBASIC INFORMATION:');
+            console.log('Observer Company:', data.observer_company);
+            console.log('Observation Company:', data.observation_company);
+            console.log('Observer:', data.observer_name);
+            console.log('Date:', data.observation_date);
+            console.log('Location:', data.location);
+            console.log('Type:', data.observation_type_text);
             
-            console.log('\nОПАСНЫЕ ФАКТОРЫ:');
+            console.log('\nHAZARDS:');
             if (data.hazards && data.hazards.length > 0) {
-                data.hazards.forEach(factor => {
-                    console.log('-', factor);
-                });
+                data.hazards.forEach(factor => console.log('-', factor));
             } else {
-                console.log('- Не указаны');
+                console.log('- Not specified');
             }
             
-            console.log('\nОБНАРУЖЕНИЕ:');
-            console.log(data.observation_description);
-            
-            console.log('\nРЕАКЦИЯ:');
-            console.log(data.reaction_description);
-            
-            console.log('\nРЕШЕНИЕ:');
-            console.log(data.solution_description);
-            
-            console.log('\nСТАТУС:', data.status);
-            console.log('ВРЕМЯ СОЗДАНИЯ:', data.timestamp);
-            console.log('=================================');
+            console.log('\nOBSERVATION:', data.observation_description);
+            console.log('\nREACTION:', data.reaction_description);
+            console.log('\nSOLUTION:', data.solution_description);
+            console.log('\nSTATUS:', data.status);
+            console.log('TIMESTAMP:', data.timestamp);
+            console.log('================================');
         }
         
-        // Динамическая валидация при вводе
-        const requiredFields = document.querySelectorAll('[required]');
-        requiredFields.forEach(field => {
+        // Dynamic validation
+        document.querySelectorAll('input, textarea').forEach(field => {
             field.addEventListener('input', function() {
                 if (this.value.trim()) {
                     this.classList.remove('invalid');
@@ -819,7 +1052,7 @@
             });
         });
         
-        // Валидация типа наблюдения
+        // Select validation
         document.getElementById('observation_type').addEventListener('change', function() {
             if (this.value) {
                 this.classList.remove('invalid');
@@ -829,9 +1062,8 @@
             }
         });
         
-        // Подсказка для текстовых полей
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
+        // Textarea focus effects
+        document.querySelectorAll('textarea').forEach(textarea => {
             textarea.addEventListener('focus', function() {
                 this.style.boxShadow = '0 0 0 3px rgba(33, 150, 243, 0.2)';
             });
@@ -841,7 +1073,7 @@
             });
         });
         
-        // Закрытие модального окна по клику вне его
+        // Close modal on outside click
         window.addEventListener('click', function(event) {
             const modal = document.getElementById('success-modal');
             if (event.target === modal) {
@@ -849,18 +1081,58 @@
             }
         });
         
-        // Анонимная авторизация для возможности работы с Firestore
+        // Anonymous authentication
         async function signInAnonymously() {
             try {
                 await auth.signInAnonymously();
-                console.log('Анонимная авторизация успешна');
+                console.log('Anonymous auth successful');
             } catch (error) {
-                console.error('Ошибка анонимной авторизации:', error);
+                console.error('Anonymous auth error:', error);
             }
         }
         
-        // Автоматическая анонимная авторизация при загрузке
+        // Auto anonymous auth
         signInAnonymously();
+        
+        // Language-specific text functions
+        function getLoadingText() {
+            const texts = {
+                'kz': 'Жіберілуде...',
+                'ru': 'Отправка...',
+                'en': 'Submitting...'
+            };
+            return texts[currentLang] || texts['en'];
+        }
+        
+        function getErrorText(type) {
+            const errors = {
+                'required': {
+                    'kz': 'Барлық міндетті өрістерді толтырыңыз (* белгіленген)',
+                    'ru': 'Пожалуйста, заполните все обязательные поля (помеченные *)',
+                    'en': 'Please fill in all required fields (marked with *)'
+                },
+                'save': {
+                    'kz': 'Деректерді сақтау кезінде қате орын алды. Өтінеміз, қайталап көріңіз.',
+                    'ru': 'Ошибка при сохранении данных. Пожалуйста, попробуйте еще раз.',
+                    'en': 'Error saving data. Please try again.'
+                }
+            };
+            return errors[type][currentLang] || errors[type]['en'];
+        }
+        
+        function getStatusText(status) {
+            const statuses = {
+                'new': {
+                    'kz': 'Жаңа',
+                    'ru': 'Новое',
+                    'en': 'New'
+                }
+            };
+            return statuses[status][currentLang] || statuses[status]['en'];
+        }
+        
+        // Initialize modal close button
+        document.querySelector('.close-modal').addEventListener('click', closeModal);
     </script>
 </body>
 </html>
