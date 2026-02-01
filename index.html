@@ -557,7 +557,7 @@
                 </select>
             </div>
             
-            <!-- Опасные и вредные факторы -->
+            <!-- Опасные и вредные факторы - ПОЛНЫЙ СПИСОК 30 ПУНКТОВ -->
             <div class="form-section">
                 <label class="language-text kz active"><strong>Қауіпті және зиянды факторлар (барлық сәйкес келетіндерді таңдаңыз):</strong></label>
                 <label class="language-text ru"><strong>Опасные и вредные факторы (выберите все подходящие):</strong></label>
@@ -568,33 +568,215 @@
                 <span class="hint language-text en">Mark all factors that were present in the observed situation</span>
                 
                 <div class="checkbox-grid">
-                    <!-- Чекбоксы будут одинаковыми для всех языков -->
+                    <!-- 1. Шум / Noise / Шуыл -->
                     <label><input type="checkbox" name="hazards[]" value="noise"> 
                         <span class="language-text kz active">Шуыл</span>
                         <span class="language-text ru">Шум</span>
                         <span class="language-text en">Noise</span>
                     </label>
+                    
+                    <!-- 2. Вибрация / Vibration / Діріл -->
                     <label><input type="checkbox" name="hazards[]" value="vibration">
                         <span class="language-text kz active">Діріл</span>
                         <span class="language-text ru">Вибрация</span>
                         <span class="language-text en">Vibration</span>
                     </label>
+                    
+                    <!-- 3. Радиация / Radiation / Сәулелену -->
                     <label><input type="checkbox" name="hazards[]" value="radiation">
                         <span class="language-text kz active">Сәулелену</span>
                         <span class="language-text ru">Радиация</span>
                         <span class="language-text en">Radiation</span>
                     </label>
+                    
+                    <!-- 4. Температура / Temperature / Температура -->
                     <label><input type="checkbox" name="hazards[]" value="temperature">
                         <span class="language-text kz active">Температура</span>
                         <span class="language-text ru">Температура</span>
                         <span class="language-text en">Temperature</span>
                     </label>
+                    
+                    <!-- 5. Освещение / Lighting / Жарықтандыру -->
                     <label><input type="checkbox" name="hazards[]" value="lighting">
                         <span class="language-text kz active">Жарықтандыру</span>
                         <span class="language-text ru">Освещение</span>
                         <span class="language-text en">Lighting</span>
                     </label>
-                    <!-- Добавьте остальные чекбоксы аналогично -->
+                    
+                    <!-- 6. Работа в экстремальную погоду / Work in extreme weather / Экстремалды ауа райында жұмыс -->
+                    <label><input type="checkbox" name="hazards[]" value="extreme_weather">
+                        <span class="language-text kz active">Экстремалды ауа райында жұмыс</span>
+                        <span class="language-text ru">Работа в экстремальную погоду</span>
+                        <span class="language-text en">Work in extreme weather</span>
+                    </label>
+                    
+                    <!-- 7. Работа на высоте / Work at height / Биіктікте жұмыс -->
+                    <label><input type="checkbox" name="hazards[]" value="height">
+                        <span class="language-text kz active">Биіктікте жұмыс</span>
+                        <span class="language-text ru">Работа на высоте</span>
+                        <span class="language-text en">Work at height</span>
+                    </label>
+                    
+                    <!-- 8. Падающие предметы / Falling objects / Құлап түсетін заттар -->
+                    <label><input type="checkbox" name="hazards[]" value="falling_objects">
+                        <span class="language-text kz active">Құлап түсетін заттар</span>
+                        <span class="language-text ru">Падающие предметы</span>
+                        <span class="language-text en">Falling objects</span>
+                    </label>
+                    
+                    <!-- 9. Подскальзывание / спотыкание / Slip/trip / Тайып қалу/күйілу -->
+                    <label><input type="checkbox" name="hazards[]" value="slip_trip">
+                        <span class="language-text kz active">Тайып қалу/күйілу</span>
+                        <span class="language-text ru">Подскальзывание / спотыкание</span>
+                        <span class="language-text en">Slip/trip</span>
+                    </label>
+                    
+                    <!-- 10. Тяжёлая техника / Heavy equipment / Ауыр техника -->
+                    <label><input type="checkbox" name="hazards[]" value="heavy_equipment">
+                        <span class="language-text kz active">Ауыр техника</span>
+                        <span class="language-text ru">Тяжёлая техника</span>
+                        <span class="language-text en">Heavy equipment</span>
+                    </label>
+                    
+                    <!-- 11. Вождение (транспорт) / Driving (vehicles) / Жүргізу (көлік) -->
+                    <label><input type="checkbox" name="hazards[]" value="driving">
+                        <span class="language-text kz active">Жүргізу (көлік)</span>
+                        <span class="language-text ru">Вождение (транспорт)</span>
+                        <span class="language-text en">Driving (vehicles)</span>
+                    </label>
+                    
+                    <!-- 12. Ручные и переносные инструменты / Hand and portable tools / Қол және портативті құралдар -->
+                    <label><input type="checkbox" name="hazards[]" value="hand_tools">
+                        <span class="language-text kz active">Қол және портативті құралдар</span>
+                        <span class="language-text ru">Ручные и переносные инструменты</span>
+                        <span class="language-text en">Hand and portable tools</span>
+                    </label>
+                    
+                    <!-- 13. Высокое давление / High pressure / Жоғары қысым -->
+                    <label><input type="checkbox" name="hazards[]" value="high_pressure">
+                        <span class="language-text kz active">Жоғары қысым</span>
+                        <span class="language-text ru">Высокое давление</span>
+                        <span class="language-text en">High pressure</span>
+                    </label>
+                    
+                    <!-- 14. Крутящиеся и вращающиеся части / Rotating and revolving parts / Айналатын және бұралатын бөлшектер -->
+                    <label><input type="checkbox" name="hazards[]" value="rotating_parts">
+                        <span class="language-text kz active">Айналатын және бұралатын бөлшектер</span>
+                        <span class="language-text ru">Крутящиеся и вращающиеся части</span>
+                        <span class="language-text en">Rotating and revolving parts</span>
+                    </label>
+                    
+                    <!-- 15. Летящие частицы / Flying particles / Ұшатын бөлшектер -->
+                    <label><input type="checkbox" name="hazards[]" value="flying_particles">
+                        <span class="language-text kz active">Ұшатын бөлшектер</span>
+                        <span class="language-text ru">Летящие частицы</span>
+                        <span class="language-text en">Flying particles</span>
+                    </label>
+                    
+                    <!-- 16. Электробезопасность / Electrical safety / Электр қауіпсіздігі -->
+                    <label><input type="checkbox" name="hazards[]" value="electrical">
+                        <span class="language-text kz active">Электр қауіпсіздігі</span>
+                        <span class="language-text ru">Электробезопасность</span>
+                        <span class="language-text en">Electrical safety</span>
+                    </label>
+                    
+                    <!-- 17. Грузоподъёмные работы / Lifting operations / Көтеру жұмыстары -->
+                    <label><input type="checkbox" name="hazards[]" value="lifting">
+                        <span class="language-text kz active">Көтеру жұмыстары</span>
+                        <span class="language-text ru">Грузоподъёмные работы</span>
+                        <span class="language-text en">Lifting operations</span>
+                    </label>
+                    
+                    <!-- 18. Химическая опасность / Chemical hazard / Химиялық қауіп -->
+                    <label><input type="checkbox" name="hazards[]" value="chemical">
+                        <span class="language-text kz active">Химиялық қауіп</span>
+                        <span class="language-text ru">Химическая опасность</span>
+                        <span class="language-text en">Chemical hazard</span>
+                    </label>
+                    
+                    <!-- 19. Биологическая опасность / Biological hazard / Биологиялық қауіп -->
+                    <label><input type="checkbox" name="hazards[]" value="biological">
+                        <span class="language-text kz active">Биологиялық қауіп</span>
+                        <span class="language-text ru">Биологическая опасность</span>
+                        <span class="language-text en">Biological hazard</span>
+                    </label>
+                    
+                    <!-- 20. Психологический фактор / Psychological factor / Психологиялық фактор -->
+                    <label><input type="checkbox" name="hazards[]" value="psychological">
+                        <span class="language-text kz active">Психологиялық фактор</span>
+                        <span class="language-text ru">Психологический фактор</span>
+                        <span class="language-text en">Psychological factor</span>
+                    </label>
+                    
+                    <!-- 21. Эргономика / Ergonomics / Эргономика -->
+                    <label><input type="checkbox" name="hazards[]" value="ergonomics">
+                        <span class="language-text kz active">Эргономика</span>
+                        <span class="language-text ru">Эргономика</span>
+                        <span class="language-text en">Ergonomics</span>
+                    </label>
+                    
+                    <!-- 22. Психоактивные вещества / Psychoactive substances / Психоактивті заттар -->
+                    <label><input type="checkbox" name="hazards[]" value="substances">
+                        <span class="language-text kz active">Психоактивті заттар</span>
+                        <span class="language-text ru">Психоактивные вещества</span>
+                        <span class="language-text en">Psychoactive substances</span>
+                    </label>
+                    
+                    <!-- 23. Ручное перемещение грузов / Manual handling of loads / Жүктерді қолмен жылжыту -->
+                    <label><input type="checkbox" name="hazards[]" value="manual_handling">
+                        <span class="language-text kz active">Жүктерді қолмен жылжыту</span>
+                        <span class="language-text ru">Ручное перемещение грузов</span>
+                        <span class="language-text en">Manual handling of loads</span>
+                    </label>
+                    
+                    <!-- 24. Уязвимые работники / Vulnerable workers / Осал жұмысшылар -->
+                    <label><input type="checkbox" name="hazards[]" value="vulnerable_workers">
+                        <span class="language-text kz active">Осал жұмысшылар</span>
+                        <span class="language-text ru">Уязвимые работники</span>
+                        <span class="language-text en">Vulnerable workers</span>
+                    </label>
+                    
+                    <!-- 25. Замкнутое пространство / Confined space / Жабық кеңістік -->
+                    <label><input type="checkbox" name="hazards[]" value="confined_space">
+                        <span class="language-text kz active">Жабық кеңістік</span>
+                        <span class="language-text ru">Замкнутое пространство</span>
+                        <span class="language-text en">Confined space</span>
+                    </label>
+                    
+                    <!-- 26. Огневые работы / Hot work / Өрт жұмыстары -->
+                    <label><input type="checkbox" name="hazards[]" value="hot_work">
+                        <span class="language-text kz active">Өрт жұмыстары</span>
+                        <span class="language-text ru">Огневые работы</span>
+                        <span class="language-text en">Hot work</span>
+                    </label>
+                    
+                    <!-- 27. Земляные работы / Excavation work / Жер қазба жұмыстары -->
+                    <label><input type="checkbox" name="hazards[]" value="excavation">
+                        <span class="language-text kz active">Жер қазба жұмыстары</span>
+                        <span class="language-text ru">Земляные работы</span>
+                        <span class="language-text en">Excavation work</span>
+                    </label>
+                    
+                    <!-- 28. Блокировка/Маркировка (LOTO) / Lockout/Tagout (LOTO) / Бұғаттау/Белгілеу (LOTO) -->
+                    <label><input type="checkbox" name="hazards[]" value="loto">
+                        <span class="language-text kz active">Бұғаттау/Белгілеу (LOTO)</span>
+                        <span class="language-text ru">Блокировка/Маркировка (LOTO)</span>
+                        <span class="language-text en">Lockout/Tagout (LOTO)</span>
+                    </label>
+                    
+                    <!-- 29. Пожарная безопасность / Fire safety / Өрт қауіпсіздігі -->
+                    <label><input type="checkbox" name="hazards[]" value="fire_safety">
+                        <span class="language-text kz active">Өрт қауіпсіздігі</span>
+                        <span class="language-text ru">Пожарная безопасность</span>
+                        <span class="language-text en">Fire safety</span>
+                    </label>
+                    
+                    <!-- 30. Другое / Other / Басқа -->
+                    <label><input type="checkbox" name="hazards[]" value="other">
+                        <span class="language-text kz active">Басқа</span>
+                        <span class="language-text ru">Другое</span>
+                        <span class="language-text en">Other</span>
+                    </label>
                 </div>
             </div>
             
@@ -891,7 +1073,7 @@
                 hazards: []
             };
             
-            // Collect checked hazards
+            // Collect checked hazards (all 30 factors now)
             const hazardCheckboxes = form.querySelectorAll('input[name="hazards[]"]:checked');
             hazardCheckboxes.forEach(checkbox => {
                 data.hazards.push(checkbox.value);
@@ -1019,7 +1201,7 @@
             console.log('Location:', data.location);
             console.log('Type:', data.observation_type_text);
             
-            console.log('\nHAZARDS:');
+            console.log('\nHAZARDS (30 factors):');
             if (data.hazards && data.hazards.length > 0) {
                 data.hazards.forEach(factor => console.log('-', factor));
             } else {
